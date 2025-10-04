@@ -1,0 +1,106 @@
+.skills {
+  padding: var(--section-padding);
+  background-color: var(--light);
+}
+
+.sectionTitle {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  position: relative;
+  display: inline-block;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  border-radius: 2px;
+}
+
+.subtitle {
+  color: var(--gray);
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.category {
+  background: white;
+  padding: 30px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.category h3 {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: var(--dark);
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 10px;
+}
+
+.skillItem {
+  margin-bottom: 20px;
+}
+
+.skillHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.skillName {
+  font-weight: 500;
+  color: var(--dark);
+}
+
+.skillPercentage {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.skillBar {
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.skillProgress {
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  border-radius: 4px;
+  transition: width 1.5s ease-in-out;
+  width: 0;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .category {
+    padding: 25px 20px;
+  }
+}

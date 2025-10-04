@@ -1,0 +1,157 @@
+.about {
+  padding: var(--section-padding);
+  background-color: var(--light);
+}
+
+.sectionTitle {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  position: relative;
+  display: inline-block;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  border-radius: 2px;
+}
+
+.subtitle {
+  color: var(--gray);
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+}
+
+.text {
+  flex: 1;
+}
+
+.subheading {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: var(--dark);
+}
+
+.description {
+  margin-bottom: 20px;
+  color: var(--gray);
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.stats {
+  margin-top: 40px;
+}
+
+.stat {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.stat:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.statNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: block;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.aboutImage {
+  width: 100%;
+  max-width: 450px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.aboutImage:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 992px) {
+  .content {
+    flex-direction: column;
+    text-align: center;
+    gap: 40px;
+  }
+
+  .text {
+    order: 2;
+  }
+
+  .image {
+    order: 1;
+  }
+
+  .stats {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .subheading {
+    font-size: 1.5rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+
+  .statNumber {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .aboutImage {
+    max-width: 100%;
+  }
+}

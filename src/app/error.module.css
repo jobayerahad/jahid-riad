@@ -1,0 +1,193 @@
+.wrapper {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  padding: 40px 20px;
+}
+
+.illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.circuit {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.circuitLine {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.3);
+  animation: circuitGlow 2s ease-in-out infinite;
+  animation-delay: calc(var(--delay) * 1s);
+}
+
+.circuitLine:nth-child(1) {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+}
+.circuitLine:nth-child(2) {
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 50%;
+}
+.circuitLine:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+}
+.circuitLine:nth-child(4) {
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 50%;
+}
+.circuitLine:nth-child(5) {
+  top: 25%;
+  left: 25%;
+  width: 50%;
+  height: 2px;
+}
+.circuitLine:nth-child(6) {
+  top: 25%;
+  left: 25%;
+  width: 2px;
+  height: 50%;
+}
+.circuitLine:nth-child(7) {
+  top: 75%;
+  right: 25%;
+  width: 50%;
+  height: 2px;
+}
+.circuitLine:nth-child(8) {
+  top: 25%;
+  right: 25%;
+  width: 2px;
+  height: 50%;
+}
+.circuitLine:nth-child(9) {
+  top: 50%;
+  left: 0;
+  width: 25%;
+  height: 2px;
+}
+.circuitLine:nth-child(10) {
+  top: 50%;
+  right: 0;
+  width: 25%;
+  height: 2px;
+}
+.circuitLine:nth-child(11) {
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 25%;
+}
+.circuitLine:nth-child(12) {
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  height: 25%;
+}
+
+.bug {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: bugFloat 3s ease-in-out infinite;
+}
+
+.bugBody {
+  width: 60px;
+  height: 40px;
+  background: white;
+  border-radius: 50% 50% 40% 40%;
+  position: relative;
+}
+
+.bugBody::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.bugAntenna {
+  position: absolute;
+  top: -15px;
+  width: 2px;
+  height: 20px;
+  background: white;
+  animation: antennaMove 2s ease-in-out infinite;
+}
+
+.bugAntenna:first-of-type {
+  left: 15px;
+  transform: rotate(-20deg);
+}
+
+.bugAntenna:last-of-type {
+  right: 15px;
+  transform: rotate(20deg);
+}
+
+@keyframes circuitGlow {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes bugFloat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  25% {
+    transform: translate(-50%, -50%) rotate(5deg);
+  }
+  75% {
+    transform: translate(-50%, -50%) rotate(-5deg);
+  }
+}
+
+@keyframes antennaMove {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .illustration {
+    height: 300px;
+  }
+
+  .circuit {
+    width: 250px;
+    height: 250px;
+  }
+}

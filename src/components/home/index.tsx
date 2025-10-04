@@ -1,27 +1,31 @@
 'use client'
 
-import { Container } from '@mantine/core'
-
-import Hero from './hero'
-import Experience from './experience'
-import Education from './education'
-import Publications from './publications'
-import Skills from './skills'
-import Certificates from './certificates'
-import Languages from './languages'
-import Footer from './footer'
+import Hero from '../hero'
+import Experience from '../experience'
+import Education from '../education'
+import Publications from '../publications'
+import Skills from '../skills'
+import Footer from '../footer'
+import Header from '../header'
+import About from '../about'
+import Contact from '../contact'
 
 const Home = () => (
-  <Container size="lg" py="xl">
-    <Hero />
-    <Experience />
-    <Education />
-    <Publications />
-    <Skills />
-    <Certificates />
-    <Languages />
+  <>
+    <Header />
+
+    <main>
+      <Hero />
+      <About />
+      <Experience />
+      <Education />
+      <Publications />
+      <Skills />
+      <Contact />
+    </main>
+
     <Footer />
-  </Container>
+  </>
 )
 
 export default Home

@@ -1,28 +1,52 @@
 'use client'
 
 import Link from 'next/link'
-import { Center, Card, Title, Text, Button, Stack, Group } from '@mantine/core'
-import { motion } from 'framer-motion'
-import { FaHome } from 'react-icons/fa'
+import { useRouter } from 'next/navigation'
+import { Container, Title, Text, Button, SimpleGrid, Group, Flex } from '@mantine/core'
+import { IoHome } from 'react-icons/io5'
+import { FaArrowLeft } from 'react-icons/fa6'
+import classes from './not-found.module.css'
 
-const NotFound = () => (
-  <Center style={{ minHeight: '70vh', padding: 40 }}>
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-      <Card shadow="lg" padding="xl">
-        <Stack align="center" gap="md">
-          <Title order={2}>404 — Page Not Found</Title>
+const NotFound = () => {
+  const { back } = useRouter()
 
-          <Text c="dimmed">We couldn’t find the page you’re looking for.</Text>
+  return (
+    <div className={classes.wrapper}>
+      <Container size="md">
+        <SimpleGrid cols={{ base: 1, md: 2 }}>
+          <Flex direction="column" justify="center">
+            <Title size="2rem" c="white" mb="lg">
+              Page not found
+            </Title>
 
-          <Group>
-            <Button component={Link} href="/" leftSection={<FaHome />}>
-              Back to Home
-            </Button>
-          </Group>
-        </Stack>
-      </Card>
-    </motion.div>
-  </Center>
-)
+            <Text mb="md" c="white">
+              The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            </Text>
+
+            <Group>
+              <Button component={Link} href="/" size="md" leftSection={<IoHome />}>
+                Go Home
+              </Button>
+
+              <Button color="white" variant="outline" size="md" leftSection={<FaArrowLeft />} onClick={back}>
+                Go Back
+              </Button>
+            </Group>
+          </Flex>
+
+          <div className={classes.illustration}>
+            <div className={classes.orbit}></div>
+            <div className={classes.planet}></div>
+            <div className={classes.rocket}>
+              <div className={classes.rocketBody}></div>
+              <div className={classes.rocketWing}></div>
+              <div className={classes.rocketFire}></div>
+            </div>
+          </div>
+        </SimpleGrid>
+      </Container>
+    </div>
+  )
+}
 
 export default NotFound
