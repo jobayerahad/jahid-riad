@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { Space_Grotesk, Inter } from 'next/font/google'
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
@@ -34,8 +35,11 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
     <body suppressHydrationWarning>
       <MantineProvider forceColorScheme="light" theme={theme} classNamesPrefix="jr">
         <Notifications />
+
         {children}
       </MantineProvider>
+
+      {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={process.env.GA_TRACKING_ID!} />}
     </body>
   </html>
 )
