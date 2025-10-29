@@ -8,6 +8,8 @@ import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 import './globals.css'
 import { theme } from '@/config/theme'
+import ReCaptchaProvider from '@/components/re-captcha-provider'
+import { WrapperProps } from '@/types'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -26,7 +28,7 @@ export const metadata = {
   description: 'Personal website of Jahid Riad - Computer Science Researcher and Engineer'
 }
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => (
+const RootLayout = ({ children }: WrapperProps) => (
   <html lang="en" className={clsx(spaceGrotesk.variable, inter.variable)} {...mantineHtmlProps}>
     <head>
       <ColorSchemeScript forceColorScheme="light" />
@@ -36,7 +38,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
       <MantineProvider forceColorScheme="light" theme={theme} classNamesPrefix="jr">
         <Notifications />
 
-        {children}
+        <ReCaptchaProvider>{children}</ReCaptchaProvider>
       </MantineProvider>
 
       {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={process.env.GA_TRACKING_ID!} />}

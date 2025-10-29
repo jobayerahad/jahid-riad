@@ -1,3 +1,5 @@
+import { useTransition } from 'react'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { Element } from 'react-scroll'
 import {
   Container,
@@ -14,32 +16,53 @@ import {
 } from '@mantine/core'
 import { motion } from 'framer-motion'
 import { useForm } from '@mantine/form'
+import { showNotification } from '@mantine/notifications'
+
 import { FaPaperPlane } from 'react-icons/fa'
 import { FiMail } from 'react-icons/fi'
 import { MdOutlinePhone } from 'react-icons/md'
 import { BsPinMapFill } from 'react-icons/bs'
+
 import classes from './styles.module.css'
+import { sendMessage } from '@/actions/contact'
+import { getMessage } from '@/utils/notification'
+import { TContactForm } from '@/types'
 
 const Contact = () => {
-  const form = useForm({
+  const [isLoading, startTransition] = useTransition()
+  const { executeRecaptcha } = useGoogleReCaptcha()
+
+  const form = useForm<TContactForm>({
     initialValues: {
       name: '',
       email: '',
       subject: '',
-      message: ''
-    },
-    validate: {
-      name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-      subject: (value) => (value.length < 5 ? 'Subject must be at least 5 characters' : null),
-      message: (value) => (value.length < 10 ? 'Message must be at least 10 characters' : null)
+      message: '',
+      token: ''
     }
+    // validate: {
+    //   name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
+    //   email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+    //   subject: (value) => (value.length < 5 ? 'Subject must be at least 5 characters' : null),
+    //   message: (value) => (value.length < 10 ? 'Message must be at least 10 characters' : null)
+    // }
   })
 
-  const handleSubmit = (values: typeof form.values) => {
-    console.log(values)
-    // Handle form submission here
-  }
+  const handleSubmit = (values: TContactForm) =>
+    startTransition(async () => {
+      if (!executeRecaptcha) {
+        showNotification({
+          message: 'Recaptcha not yet available',
+          color: 'red'
+        })
+        return
+      }
+
+      const token = await executeRecaptcha('contact_form_submit')
+      values.token = token
+      const res = await sendMessage({ ...values, token })
+      // showNotification(getMessage(res))
+    })
 
   return (
     <Element name="contact" className="section bg-dark">
@@ -131,7 +154,13 @@ const Contact = () => {
                 />
               </Stack>
 
-              <Button type="submit" mt="lg" rightSection={<FaPaperPlane />}>
+              <Button
+                type="submit"
+                mt="lg"
+                data-sitekey="6Ldg3_orAAAAACEszp86gz2ldTLD7Pi622si6D7Z"
+                data-callback="onSubmit"
+                rightSection={<FaPaperPlane />}
+              >
                 Send Message
               </Button>
             </form>
