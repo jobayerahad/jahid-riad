@@ -17,6 +17,7 @@ import {
 import { motion } from 'framer-motion'
 import { useForm } from '@mantine/form'
 import { showNotification } from '@mantine/notifications'
+import { yupResolver } from 'mantine-form-yup-resolver'
 
 import { FaPaperPlane } from 'react-icons/fa'
 import { FiMail } from 'react-icons/fi'
@@ -27,12 +28,14 @@ import classes from './styles.module.css'
 import { sendMessage } from '@/actions/contact'
 import { getMessage } from '@/utils/notification'
 import { TContactForm } from '@/types'
+import { contactSchema } from '@/schemas'
 
 const Contact = () => {
   const [isLoading, startTransition] = useTransition()
   const { executeRecaptcha } = useGoogleReCaptcha()
 
   const form = useForm<TContactForm>({
+    validate: yupResolver(contactSchema),
     initialValues: {
       name: '',
       email: '',
@@ -40,12 +43,6 @@ const Contact = () => {
       message: '',
       token: ''
     }
-    // validate: {
-    //   name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
-    //   email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-    //   subject: (value) => (value.length < 5 ? 'Subject must be at least 5 characters' : null),
-    //   message: (value) => (value.length < 10 ? 'Message must be at least 10 characters' : null)
-    // }
   })
 
   const handleSubmit = (values: TContactForm) =>
@@ -58,10 +55,12 @@ const Contact = () => {
         return
       }
 
-      const token = await executeRecaptcha('contact_form_submit')
+      const token = await executeRecaptcha('contact_form')
       values.token = token
       const res = await sendMessage({ ...values, token })
-      // showNotification(getMessage(res))
+      showNotification(getMessage(res))
+
+      if (res.status === 200) form.reset()
     })
 
   return (
@@ -148,19 +147,13 @@ const Contact = () => {
 
                 <Textarea
                   label="Your Message"
-                  rows={3}
+                  rows={4}
                   placeholder="Enter your message"
                   {...form.getInputProps('message')}
                 />
               </Stack>
 
-              <Button
-                type="submit"
-                mt="lg"
-                data-sitekey="6Ldg3_orAAAAACEszp86gz2ldTLD7Pi622si6D7Z"
-                data-callback="onSubmit"
-                rightSection={<FaPaperPlane />}
-              >
+              <Button type="submit" mt="lg" rightSection={<FaPaperPlane />} loading={isLoading}>
                 Send Message
               </Button>
             </form>
