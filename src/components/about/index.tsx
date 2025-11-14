@@ -5,8 +5,7 @@ import classes from './styles.module.css'
 
 const stats = [
   { number: '5+', label: 'Years Experience' },
-  { number: '20+', label: 'Projects Completed' },
-  { number: '3', label: 'Publications' }
+  { number: '12', label: 'Publications' }
 ]
 
 const About = () => {
@@ -41,9 +40,9 @@ const About = () => {
               solutions that are both functional and innovative.
             </Text>
             <Text className={classes.description}>
-              Currently pursuing my MSc in Computer Science and Engineering at University of Asia Pacific, I&apos;m
-              focused on research in machine learning applications and developing practical solutions to real-world
-              problems.
+              Now working at Global Systems LLC, I’m focused on building practical, forward-driven engineering solutions
+              while continuing to expand my expertise in advanced computing and problem-solving. I’m committed to taking
+              on challenging projects that push my skills and create meaningful impact.
             </Text>
 
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing={30} className={classes.stats}>

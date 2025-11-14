@@ -7,21 +7,21 @@ import classes from './styles.module.css'
 
 const education = [
   {
-    degree: 'M.Sc. in Computer Science & Engineering',
-    institution: 'University of Asia Pacific',
-    period: '2021 - Present',
-    description: 'Focus on Machine Learning, Deep Learning, and their applications in solving real-world problems.'
+    degree: 'M.Sc. in Information Technology',
+    institution: 'Washington University of Science and Technology',
+    period: '2023 - 2024',
+    description: 'Major in IT System and Management.'
   },
   {
-    degree: 'B.Sc. in Computer Science & Engineering',
-    institution: 'Daffodil International University',
-    period: '2016 - 2020',
-    description: 'Graduated with honors. Completed thesis on "Machine Learning Approaches for Predictive Analytics".'
+    degree: 'B.Sc. in Computer Science and Telecommunication Engineering',
+    institution: 'Noakhali Science and Technology University',
+    period: '2013 - 2019',
+    description: 'Focus on digital communication systems and image transmission technologies. .'
   },
   {
     degree: 'Higher Secondary Certificate',
     institution: 'Dhaka College',
-    period: '2013 - 2015',
+    period: '2010 - 2012',
     description: 'Science Group with focus on Physics, Chemistry, and Mathematics.'
   }
 ]

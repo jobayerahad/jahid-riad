@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Container, Button } from '@mantine/core'
 import { Element } from 'react-scroll'
 import { motion } from 'framer-motion'
@@ -54,15 +55,21 @@ const Hero = () => {
                 size="lg"
                 rightSection={<FaArrowRight size={20} />}
                 className={classes.primaryButton}
-                onClick={() => document.getElementById('publications')?.scrollIntoView({ behavior: 'smooth' })}
+                component={Link}
+                href="https://scholar.google.com/citations?user=fCis8uEAAAAJ&hl=en"
+                target="_blank"
               >
                 View Publications
               </Button>
+
               <Button
                 size="lg"
                 variant="outline"
                 leftSection={<FiDownload size={20} />}
                 className={classes.secondaryButton}
+                component={Link}
+                href="/md_jahid_alam_riad_cv.pdf"
+                download
               >
                 Download CV
               </Button>
