@@ -1,3 +1,5 @@
+import { useTransition } from 'react'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { Element } from 'react-scroll'
 import {
   Container,
@@ -14,32 +16,52 @@ import {
 } from '@mantine/core'
 import { motion } from 'framer-motion'
 import { useForm } from '@mantine/form'
+import { showNotification } from '@mantine/notifications'
+import { yupResolver } from 'mantine-form-yup-resolver'
+
 import { FaPaperPlane } from 'react-icons/fa'
 import { FiMail } from 'react-icons/fi'
 import { MdOutlinePhone } from 'react-icons/md'
 import { BsPinMapFill } from 'react-icons/bs'
+
 import classes from './styles.module.css'
+import { sendMessage } from '@/actions/contact'
+import { getMessage } from '@/utils/notification'
+import { TContactForm } from '@/types'
+import { contactSchema } from '@/schemas'
 
 const Contact = () => {
-  const form = useForm({
+  const [isLoading, startTransition] = useTransition()
+  const { executeRecaptcha } = useGoogleReCaptcha()
+
+  const form = useForm<TContactForm>({
+    validate: yupResolver(contactSchema),
     initialValues: {
       name: '',
       email: '',
       subject: '',
-      message: ''
-    },
-    validate: {
-      name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-      subject: (value) => (value.length < 5 ? 'Subject must be at least 5 characters' : null),
-      message: (value) => (value.length < 10 ? 'Message must be at least 10 characters' : null)
+      message: '',
+      token: ''
     }
   })
 
-  const handleSubmit = (values: typeof form.values) => {
-    console.log(values)
-    // Handle form submission here
-  }
+  const handleSubmit = (values: TContactForm) =>
+    startTransition(async () => {
+      if (!executeRecaptcha) {
+        showNotification({
+          message: 'Recaptcha not yet available',
+          color: 'red'
+        })
+        return
+      }
+
+      const token = await executeRecaptcha('contact_form')
+      values.token = token
+      const res = await sendMessage({ ...values, token })
+      showNotification(getMessage(res))
+
+      if (res.status === 200) form.reset()
+    })
 
   return (
     <Element name="contact" className="section bg-dark">
@@ -80,7 +102,7 @@ const Contact = () => {
 
                 <div>
                   <Title order={4}>Email</Title>
-                  <Anchor href="mailto:jahidriad.cse@gmail.com">jahidriad.cse@gmail.com</Anchor>
+                  <Anchor href="mailto:jahidalamriad@gmail.com">jahidalamriad@gmail.com</Anchor>
                 </div>
               </Group>
 
@@ -125,13 +147,13 @@ const Contact = () => {
 
                 <Textarea
                   label="Your Message"
-                  rows={3}
+                  rows={4}
                   placeholder="Enter your message"
                   {...form.getInputProps('message')}
                 />
               </Stack>
 
-              <Button type="submit" mt="lg" rightSection={<FaPaperPlane />}>
+              <Button type="submit" mt="lg" rightSection={<FaPaperPlane />} loading={isLoading}>
                 Send Message
               </Button>
             </form>
