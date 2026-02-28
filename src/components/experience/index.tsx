@@ -5,22 +5,25 @@ import classes from './styles.module.css'
 
 const experiences = [
   {
-    period: '2021 - Present',
-    title: 'Research Assistant',
+    period: '10th Nov 2025 - Present',
+    title: 'IT Business Analyst',
+    organization: 'UpSkill Consultancy INC, Jackson Heights, New York',
     description:
-      'Working on machine learning applications in healthcare and developing predictive models for disease diagnosis at University of Asia Pacific.'
+      'Bridge business needs and IT solutions through requirements analysis, stakeholder collaboration, data insights, and system implementation support.'
   },
   {
-    period: '2020 - 2021',
-    title: 'Web Developer',
+    period: '10th Feb 2025 - 09th Nov 2025',
+    title: 'Trainee Business Analyst',
+    organization: 'Global systems LLC, Irving, Texas',
     description:
-      'Developed and maintained responsive web applications using modern frameworks and technologies for various clients and projects.'
+      'Analyze business processes, translate requirements into data-driven solutions, and support stakeholders with reports and dashboards.'
   },
   {
     period: '2019 - 2020',
-    title: 'Software Engineering Intern',
+    title: 'Computer Technology Lecturer',
+    organization: 'Institute of Science Trade and Technology (ISTT) Dhaka, Bangladesh',
     description:
-      'Gained hands-on experience in software development lifecycle, agile methodologies, and collaborative coding practices.'
+      'Delivered computer science courses, updated curriculum, and mentored students in programming, systems, and career development.'
   }
 ]
 
@@ -55,6 +58,7 @@ const Experience = () => {
                 <Title order={3} className={classes.timelineTitle}>
                   {exp.title}
                 </Title>
+                <Text className={classes.timelineOrg}>{exp.organization}</Text>
                 <Text className={classes.timelineDescription}>{exp.description}</Text>
               </div>
             </motion.div>

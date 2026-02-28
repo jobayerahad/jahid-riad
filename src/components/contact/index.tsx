@@ -77,7 +77,7 @@ const Contact = () => {
           <Text className="subtitle">Let&apos;s discuss research opportunities or collaborations</Text>
         </motion.div>
 
-        <SimpleGrid cols={{ base: 1, md: 2 }}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} className={classes.contactBox}>
           <motion.div
             className={classes.info}
             initial={{ opacity: 0, x: -50 }}
@@ -94,7 +94,7 @@ const Contact = () => {
               projects. Whether you have a proposal or just want to connect, feel free to reach out!
             </Text>
 
-            <Stack>
+            {/* <Stack>
               <Group>
                 <ActionIcon size="xl" radius="xl">
                   <FiMail size={20} />
@@ -127,7 +127,7 @@ const Contact = () => {
                   <Text>Washington, DC, USA</Text>
                 </div>
               </Group>
-            </Stack>
+            </Stack> */}
           </motion.div>
 
           <motion.div

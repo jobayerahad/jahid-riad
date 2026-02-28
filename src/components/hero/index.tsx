@@ -62,7 +62,7 @@ const Hero = () => {
                 View Publications
               </Button>
 
-              <Button
+              {/* <Button
                 size="lg"
                 variant="outline"
                 leftSection={<FiDownload size={20} />}
@@ -72,7 +72,7 @@ const Hero = () => {
                 download
               >
                 Download CV
-              </Button>
+              </Button> */}
             </motion.div>
           </motion.div>
 
