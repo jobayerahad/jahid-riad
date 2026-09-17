@@ -1,105 +1,49 @@
 .education {
-  padding: var(--section-padding);
-  background-color: var(--light);
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-border);
 }
-
-.sectionTitle {
-  text-align: center;
-  margin-bottom: 80px;
+.list {
+  border-top: 1px solid var(--color-border);
 }
-
-.title {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
-  position: relative;
-  display: inline-block;
-}
-
-.title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  border-radius: 2px;
-}
-
-.subtitle {
-  color: var(--gray);
-  max-width: 600px;
-  margin: 0 auto;
-  font-size: 1.1rem;
-}
-
-.grid {
+.row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 2fr) minmax(8rem, 0.8fr);
+  gap: clamp(1rem, 3vw, 3rem);
+  padding: clamp(1.4rem, 2.6vw, 2rem) 0;
+  border-bottom: 1px solid var(--color-border);
 }
-
-.card {
-  background-color: white;
-  padding: 40px 30px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-  border-top: 4px solid var(--primary);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.period,
+.location {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.84rem;
 }
-
-.card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+.location {
+  text-align: right;
 }
-
-.icon {
-  font-size: 2.5rem;
-  color: var(--primary);
-  margin-bottom: 20px;
+.content h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
-
-.card h3 {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-  color: var(--dark);
+.institution {
+  margin: 0.45rem 0 0;
+  color: var(--color-primary);
+  font-weight: 650;
 }
-
-.meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-  color: var(--gray);
+.detail {
+  max-width: 65ch;
+  margin: 0.7rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.91rem;
 }
-
-.metaItem {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.card p {
-  color: var(--gray);
-  line-height: 1.6;
-  flex-grow: 1;
-}
-
-@media (max-width: 768px) {
-  .title {
-    font-size: 2rem;
-  }
-
-  .grid {
+@media (max-width: 48em) {
+  .row {
     grid-template-columns: 1fr;
+    gap: 0.4rem;
   }
-
-  .card {
-    padding: 30px 20px;
+  .location {
+    text-align: left;
   }
 }

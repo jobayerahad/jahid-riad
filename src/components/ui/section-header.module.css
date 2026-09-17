@@ -1,0 +1,38 @@
+.header {
+  max-width: 50rem;
+  margin: 0 0 clamp(2rem, 4vw, 3.5rem);
+  text-align: left;
+}
+.header[data-align='center'] {
+  margin-inline: 0;
+  text-align: left;
+}
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.title {
+  max-width: 24ch;
+  margin: 0;
+  font-size: clamp(2.2rem, 4.5vw, 4rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+.description {
+  max-width: 65ch;
+  margin: 1rem 0 0;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.header[data-inverse] .eyebrow {
+  color: #bcd3c0;
+}
+.header[data-inverse] .description {
+  color: rgb(255 255 255 / 72%);
+}

@@ -1,0 +1,24 @@
+.banner {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10001;
+  min-height: 64px;
+  padding: 0.625rem clamp(1rem, 4vw, 2rem);
+  color: white;
+  background: #b54708;
+  box-shadow: 0 4px 16px rgb(17 24 39 / 18%);
+}
+
+.preview {
+  padding-top: 64px;
+}
+
+@media (max-width: 30em) {
+  .banner {
+    min-height: 72px;
+  }
+
+  .preview {
+    padding-top: 72px;
+  }
+}

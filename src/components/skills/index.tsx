@@ -1,96 +1,36 @@
-'use client'
-
-import { Container, Title, Text } from '@mantine/core'
-import { motion } from 'framer-motion'
-import { useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { Container, Text, Title } from '@mantine/core'
+import { getPortfolioContent } from '@/data/portfolio'
+import SectionHeader from '@/components/ui/section-header'
+import Reveal from '@/components/ui/reveal'
 import classes from './styles.module.css'
+import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
-const skills = {
-  technical: [
-    { name: 'Python', percentage: 95 },
-    { name: 'JavaScript', percentage: 90 },
-    { name: 'Machine Learning', percentage: 85 },
-    { name: 'React', percentage: 80 }
-  ],
-  research: [
-    { name: 'Data Analysis', percentage: 90 },
-    { name: 'Statistical Modeling', percentage: 85 },
-    { name: 'Academic Writing', percentage: 80 },
-    { name: 'Research Methodology', percentage: 85 }
-  ]
-}
-
-const Skills = () => {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
+const Skills = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
+  const snapshot = content ?? (await getPortfolioContent())
+  const capabilityGroups = snapshot.capabilities.filter((item) => item.enabled)
+  const { copy } = snapshot
 
   return (
-    <section id="skills" className={classes.skills} ref={ref}>
+    <section id="skills" className={`section ${classes.skills}`} aria-labelledby="skills-title">
       <Container size="xl">
-        <motion.div
-          className={classes.sectionTitle}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <Title className={classes.title}>Skills & Expertise</Title>
-          <Text className={classes.subtitle}>My technical skills and areas of expertise</Text>
-        </motion.div>
-
-        <div className={classes.container}>
-          <motion.div
-            className={classes.category}
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Title order={3}>Technical Skills</Title>
-            {skills.technical.map((skill, index) => (
-              <div key={skill.name} className={classes.skillItem}>
-                <div className={classes.skillHeader}>
-                  <span className={classes.skillName}>{skill.name}</span>
-                  <span className={classes.skillPercentage}>{skill.percentage}%</span>
-                </div>
-                <div className={classes.skillBar}>
-                  <motion.div
-                    className={classes.skillProgress}
-                    initial={{ width: 0 }}
-                    animate={isInView ? { width: `${skill.percentage}%` } : { width: 0 }}
-                    transition={{ duration: 1.5, delay: index * 0.1 }}
-                  />
-                </div>
-              </div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            className={classes.category}
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Title order={3}>Research Skills</Title>
-            {skills.research.map((skill, index) => (
-              <div key={skill.name} className={classes.skillItem}>
-                <div className={classes.skillHeader}>
-                  <span className={classes.skillName}>{skill.name}</span>
-                  <span className={classes.skillPercentage}>{skill.percentage}%</span>
-                </div>
-                <div className={classes.skillBar}>
-                  <motion.div
-                    className={classes.skillProgress}
-                    initial={{ width: 0 }}
-                    animate={isInView ? { width: `${skill.percentage}%` } : { width: 0 }}
-                    transition={{ duration: 1.5, delay: (index + skills.technical.length) * 0.1 }}
-                  />
-                </div>
-              </div>
-            ))}
-          </motion.div>
+        <SectionHeader
+          id="skills-title"
+          eyebrow={copy.capabilitiesEyebrow}
+          title={copy.capabilitiesTitle}
+          description={copy.capabilitiesDescription}
+        />
+        <div className={classes.grid}>
+          {capabilityGroups.map((group) => (
+            <Reveal as="article" className={classes.group} key={group.id}>
+              <Title order={3}>{group.title}</Title>
+              <Text className={classes.description}>{group.description}</Text>
+              <ul className={classes.items} aria-label={`${group.title} skills`}>
+                {group.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </Reveal>
+          ))}
         </div>
       </Container>
     </section>

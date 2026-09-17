@@ -1,171 +1,100 @@
 'use server'
 
-import axios from 'axios'
-import { TContactForm } from '@/types'
+import { headers } from 'next/headers'
+import { contactSchema } from '@/schemas/contact'
+import type { ContactResult } from '@/types'
+import { createContactEmail } from '@/lib/email-template'
+import { getContactEnv } from '@/lib/env'
+import { isContactRateLimited } from '@/lib/rate-limit'
 import { sendEmail } from './utilities'
 
-export const sendMessage = async (formData: TContactForm) => {
+type RecaptchaResponse = {
+  success?: boolean
+  score?: number
+  action?: string
+  hostname?: string
+}
+
+const getClientKey = async () => {
+  const requestHeaders = await headers()
+  return (
+    requestHeaders.get('cf-connecting-ip') ?? requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  )
+}
+
+export const sendMessage = async (input: unknown): Promise<ContactResult> => {
+  const parsed = contactSchema.safeParse(input)
+
+  if (!parsed.success) {
+    const flattened = parsed.error.flatten().fieldErrors
+    return {
+      ok: false,
+      code: 'VALIDATION',
+      message: 'Please review the highlighted fields.',
+      fieldErrors: Object.fromEntries(Object.entries(flattened).map(([field, messages]) => [field, messages?.[0]]))
+    }
+  }
+
+  const env = getContactEnv()
+  if (!env)
+    return {
+      ok: false,
+      code: 'CONFIG',
+      message: 'The contact form is temporarily unavailable. Please try again later.'
+    }
+
   try {
-    const { data } = await axios.post(
-      'https://www.google.com/recaptcha/api/siteverify',
+    if (await isContactRateLimited(await getClientKey(), env)) {
+      return {
+        ok: false,
+        code: 'RATE_LIMIT',
+        message: 'Too many attempts. Please wait a few minutes and try again.'
+      }
+    }
+  } catch {
+    return {
+      ok: false,
+      code: 'CONFIG',
+      message: 'The contact form is temporarily unavailable. Please try again later.'
+    }
+  }
+
+  try {
+    const verification = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ secret: env.RECAPTCHA_SECRET_KEY, response: parsed.data.token }),
+      cache: 'no-store'
+    })
+    const result = (await verification.json()) as RecaptchaResponse
+
+    if (
+      !verification.ok ||
+      !result.success ||
+      (result.score ?? 0) < 0.5 ||
+      result.action !== 'contact_form' ||
+      result.hostname !== env.RECAPTCHA_HOSTNAME
+    ) {
+      return { ok: false, code: 'BOT', message: 'Bot verification failed. Please refresh and try again.' }
+    }
+
+    const email = createContactEmail(parsed.data)
+    await sendEmail(
+      { user: env.GMAIL_USER, password: env.GMAIL_APP_PASSWORD },
       {
-        secret: process.env.RECAPTCHA_SECRET_KEY,
-        response: formData.token
-      },
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        to: env.RECEIVER_EMAIL,
+        replyTo: parsed.data.email,
+        subject: `[Portfolio] ${parsed.data.subject}`,
+        ...email
       }
     )
 
-    if (!data.success || data.score < 0.5)
-      return {
-        status: 400,
-        message: 'reCAPTCHA verification failed. Please try again.'
-      }
-
-    if (data.action !== 'contact_form')
-      return {
-        status: 400,
-        message: 'Invalid reCAPTCHA action.'
-      }
-
-    await sendEmail({
-      to: process.env.RECEIVER_EMAIL || '',
-      subject: formData.subject || 'Contact Form Message',
-      text: `Name: ${formData.name}\nEmail: ${formData.email}\nMessage: ${formData.message}`,
-      html: ` <!DOCTYPE html>
-              <html lang="en">
-              <head>
-                <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>New Contact Form Submission</title>
-                <style>
-                  body {
-                    margin: 0;
-                    padding: 40px 0;
-                    background: #f6f8fb;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                    color: #111827;
-                  }
-
-                  .email-wrapper {
-                    max-width: 640px;
-                    margin: 0 auto;
-                    background: #ffffff;
-                    border-radius: 16px;
-                    overflow: hidden;
-                    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-                    border: 1px solid rgba(0,0,0,0.05);
-                  }
-
-                  .header {
-                    background: linear-gradient(135deg, #6366f1, #3b82f6);
-                    color: #fff;
-                    padding: 32px;
-                    text-align: center;
-                  }
-
-                  .header h1 {
-                    margin: 0;
-                    font-size: 22px;
-                    letter-spacing: -0.5px;
-                    font-weight: 600;
-                  }
-
-                  .content {
-                    padding: 32px;
-                  }
-
-                  .content h2 {
-                    font-size: 18px;
-                    font-weight: 600;
-                    margin-bottom: 16px;
-                    color: #111827;
-                  }
-
-                  .info {
-                    margin-bottom: 24px;
-                  }
-
-                  .info-item {
-                    margin-bottom: 12px;
-                    font-size: 15px;
-                    color: #374151;
-                  }
-
-                  .info-item span {
-                    font-weight: 600;
-                    color: #111827;
-                  }
-
-                  .message-box {
-                    background: #f9fafb;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 12px;
-                    padding: 20px;
-                    font-size: 15px;
-                    line-height: 1.6;
-                    white-space: pre-wrap;
-                  }
-
-                  .footer {
-                    text-align: center;
-                    padding: 24px;
-                    font-size: 13px;
-                    color: #6b7280;
-                    border-top: 1px solid #f3f4f6;
-                    background: #fafafa;
-                  }
-
-                  a {
-                    color: #3b82f6;
-                    text-decoration: none;
-                  }
-
-                  @media (max-width: 600px) {
-                    body { padding: 20px; }
-                    .content { padding: 24px; }
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="email-wrapper">
-                  <div class="header">
-                    <h1>Contact Form Message</h1>
-                  </div>
-
-                  <div class="content">
-                    <div class="info">
-                      <div class="info-item"><span>Name:</span> ${formData.name}</div>
-                      <div class="info-item"><span>Email:</span> <a href="mailto:${formData.email}">${
-        formData.email
-      }</a></div>
-                      <div class="info-item"><span>Subject:</span> ${formData.subject}</div>
-                    </div>
-
-                    <h2>Message</h2>
-                    <div class="message-box">${formData.message.replace(/\n/g, '<br/>')}</div>
-                  </div>
-
-                  <div class="footer">
-                    This message was sent from your website’s contact form.<br>
-                    &copy; ${new Date().getFullYear()} All rights reserved.
-                  </div>
-                </div>
-              </body>
-              </html>`
-    })
-
+    return { ok: true, message: 'Your message was sent. Thank you for getting in touch.' }
+  } catch {
     return {
-      status: 200,
-      message: 'Your message has been sent successfully! We’ll get back to you soon.'
-    }
-  } catch (error) {
-    return {
-      status: 500,
-      message: 'Oops, something went wrong while sending your message. Please try again in a moment.'
+      ok: false,
+      code: 'DELIVERY',
+      message: 'The message could not be sent right now. Please try again later.'
     }
   }
 }

@@ -1,157 +1,96 @@
 .about {
-  padding: var(--section-padding);
-  background-color: var(--light);
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-border);
 }
-
-.sectionTitle {
-  text-align: center;
-  margin-bottom: 80px;
+.layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1.45fr);
+  gap: clamp(2rem, 7vw, 7rem);
 }
-
-.title {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
-  position: relative;
-  display: inline-block;
+.layout[data-image] {
+  grid-template-columns: minmax(8rem, 0.45fr) minmax(0, 1.4fr) minmax(12rem, 0.65fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
 }
-
-.title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  border-radius: 2px;
+.label {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-
-.subtitle {
-  color: var(--gray);
-  max-width: 600px;
-  margin: 0 auto;
-  font-size: 1.1rem;
+.copy {
+  max-width: 56rem;
 }
-
-.content {
-  display: flex;
-  align-items: center;
-  gap: 60px;
+.copy > header {
+  margin-bottom: 1.75rem;
 }
-
-.text {
-  flex: 1;
+.lead {
+  max-width: 60ch;
+  color: var(--color-ink-soft);
+  font-size: clamp(1.18rem, 2vw, 1.5rem);
+  line-height: 1.55;
 }
-
-.subheading {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  color: var(--dark);
+.body {
+  max-width: 65ch;
+  margin: 1.2rem 0 0;
+  color: var(--color-muted);
 }
-
-.description {
-  margin-bottom: 20px;
-  color: var(--gray);
-  font-size: 1.1rem;
-  line-height: 1.8;
+.principles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 3vw, 3rem);
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
 }
-
-.stats {
-  margin-top: 40px;
+.principles h3 {
+  margin: 0;
+  font-size: 1.05rem;
 }
-
-.stat {
-  text-align: center;
-  padding: 20px;
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  transition: var(--transition);
+.principles p {
+  max-width: 35ch;
+  margin: 0.65rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.94rem;
 }
-
-.stat:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+.imagePanel {
+  min-width: 0;
+  margin: 0;
 }
-
-.statNumber {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--primary);
-  display: block;
-  line-height: 1;
-  margin-bottom: 5px;
-}
-
-.statLabel {
-  font-size: 0.9rem;
-  color: var(--gray);
-  font-weight: 500;
-}
-
 .image {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.aboutImage {
+  display: block;
   width: 100%;
-  max-width: 450px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  transition: var(--transition);
+  height: auto;
+  max-height: 25rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
 }
-
-.aboutImage:hover {
-  transform: scale(1.02);
+.imagePanel figcaption {
+  margin-top: 0.65rem;
+  color: var(--color-muted);
+  font-size: 0.76rem;
 }
-
-@media (max-width: 992px) {
-  .content {
-    flex-direction: column;
-    text-align: center;
-    gap: 40px;
+@media (max-width: 62em) {
+  .layout[data-image] {
+    grid-template-columns: minmax(8rem, 0.45fr) minmax(0, 1.4fr);
   }
-
-  .text {
-    order: 2;
-  }
-
-  .image {
-    order: 1;
-  }
-
-  .stats {
-    justify-content: center;
+  .imagePanel {
+    grid-column: 2;
+    max-width: 20rem;
   }
 }
-
-@media (max-width: 768px) {
-  .title {
-    font-size: 2rem;
-  }
-
-  .subheading {
-    font-size: 1.5rem;
-  }
-
-  .description {
-    font-size: 1rem;
-  }
-
-  .statNumber {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .stats {
+@media (max-width: 48em) {
+  .layout,
+  .layout[data-image] {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
-
-  .aboutImage {
-    max-width: 100%;
+  .imagePanel {
+    grid-column: 1;
+  }
+  .principles {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
   }
 }

@@ -1,80 +1,32 @@
 'use client'
 
-type Props = {
-  error: Error & { digest?: string }
-  reset: () => void
+import { useRouter } from 'next/navigation'
+
+type Props = { error: Error & { digest?: string }; reset: () => void }
+
+const GlobalError = ({ reset }: Props) => {
+  const router = useRouter()
+
+  return (
+    <html lang="en">
+      <body style={{ margin: 0, background: '#111a2e', color: 'white', fontFamily: 'Arial, sans-serif' }}>
+        <main style={{ maxWidth: 640, margin: '0 auto', padding: '20vh 24px 48px', textAlign: 'center' }}>
+          <h1>Something went wrong</h1>
+          <p>An unexpected error occurred. Please try again or return to the homepage.</p>
+          <button type="button" onClick={reset} style={{ minHeight: 44, padding: '10px 20px', margin: 8 }}>
+            Try again
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            style={{ minHeight: 44, padding: '10px 20px', margin: 8 }}
+          >
+            Go home
+          </button>
+        </main>
+      </body>
+    </html>
+  )
 }
-
-const GlobalError = ({ error, reset }: Props) => (
-  <html>
-    <head>
-      <style>{`
-          body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            min-height: 100dvh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .container {
-            text-align: center;
-            color: white;
-            padding: 40px;
-            max-width: 600px;
-          }
-          h1 { 
-            font-size: 2.5rem; 
-            margin-bottom: 20px; 
-          }
-          p { 
-            font-size: 1.2rem; 
-            margin-bottom: 30px; 
-            opacity: 0.9;
-          }
-          .error { 
-            background: rgba(0,0,0,0.2); 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            font-family: monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-          }
-          button { 
-            background: white; 
-            color: #667eea; 
-            border: none; 
-            padding: 12px 30px; 
-            border-radius: 8px; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            margin: 0 10px;
-            font-weight: 600;
-          }
-          button:hover { 
-            background: #f5f5f5; 
-          }
-          .buttons { 
-            margin-top: 30px; 
-          }
-        `}</style>
-    </head>
-
-    <body>
-      <div className="container">
-        <h1>Something went wrong!</h1>
-        <p>We apologize for the inconvenience. An unexpected error has occurred.</p>
-        <code className="error">{error.message || 'Unknown error occurred'}</code>
-        <div className="buttons">
-          <button onClick={() => reset()}>Try Again</button>
-          <button onClick={() => (window.location.href = '/')}>Go Home</button>
-        </div>
-      </div>
-    </body>
-  </html>
-)
 
 export default GlobalError

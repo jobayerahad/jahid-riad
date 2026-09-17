@@ -1,95 +1,79 @@
-'use client'
-
-import Link from 'next/link'
-import { Container, Button } from '@mantine/core'
-import { Element } from 'react-scroll'
-import { motion } from 'framer-motion'
-import { FaArrowRight } from 'react-icons/fa6'
-import { FiDownload } from 'react-icons/fi'
+import Image from 'next/image'
+import { Container, Text, Title } from '@mantine/core'
+import { HiArrowUpRight } from 'react-icons/hi2'
+import { getPortfolioContent } from '@/data/portfolio'
+import { getHeroIntroduction, getHeroPortrait, getHeroStatement } from '@/lib/portfolio-presentation'
 import classes from './styles.module.css'
+import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
-const Hero = () => {
+const Hero = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
+  const snapshot = content ?? (await getPortfolioContent())
+  const { profile, copy } = snapshot
+  const portrait = getHeroPortrait(snapshot.settings)
+  const introduction = getHeroIntroduction(snapshot)
+  const statement = getHeroStatement(snapshot)
+  const degree = snapshot.education.find((item) => item.enabled)?.degree
+  const publicationCount = snapshot.publications.filter((item) => item.enabled).length
+
   return (
-    <Element name="home" className={classes.hero}>
+    <section id="home" className={classes.hero} aria-labelledby="hero-title">
       <Container size="xl" className={classes.container}>
         <div className={classes.content}>
-          <motion.div
-            className={classes.text}
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.span
-              className={classes.tagline}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              Researcher & Engineer
-            </motion.span>
+          <div className={classes.copy}>
+            <Text className={classes.eyebrow}>
+              {profile.role} <span aria-hidden="true">/</span> {profile.location}
+            </Text>
+            <Title order={1} id="hero-title" className={classes.title}>
+              {profile.name}
+            </Title>
+            <Text className={classes.statement}>{statement}</Text>
+            <Text className={classes.introduction}>{introduction}</Text>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-            >
-              Hi, I'm <span>Md. Jahid Alam Riad</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.8 }}
-            >
-              I&apos;m a Computer Science graduate with expertise in web development, machine learning, and software
-              engineering. Passionate about creating innovative solutions to complex problems.
-            </motion.p>
-
-            <motion.div
-              className={classes.buttons}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.8 }}
-            >
-              <Button
-                size="lg"
-                rightSection={<FaArrowRight size={20} />}
-                className={classes.primaryButton}
-                component={Link}
-                href="https://scholar.google.com/citations?user=fCis8uEAAAAJ&hl=en"
-                target="_blank"
+            <div className={classes.actions}>
+              <a href={copy.heroPrimaryHref} className={classes.primaryAction}>
+                {copy.heroPrimaryLabel} <HiArrowUpRight aria-hidden="true" />
+              </a>
+              <a
+                href={copy.heroSecondaryHref}
+                className={classes.secondaryAction}
+                target={copy.heroSecondaryHref.startsWith('http') ? '_blank' : undefined}
+                rel={copy.heroSecondaryHref.startsWith('http') ? 'noopener noreferrer' : undefined}
               >
-                View Publications
-              </Button>
-
-              {/* <Button
-                size="lg"
-                variant="outline"
-                leftSection={<FiDownload size={20} />}
-                className={classes.secondaryButton}
-                component={Link}
-                href="/md_jahid_alam_riad_cv.pdf"
-                download
-              >
-                Download CV
-              </Button> */}
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            className={classes.image}
-            initial={{ opacity: 0, x: 50, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-          >
-            <div className={classes.imageContainer}>
-              <img src="/riad-01.jpg" alt="Jahid Alam Riad" className={classes.profileImage} />
-              <div className={classes.imageBackground}></div>
+                {copy.heroSecondaryLabel} <HiArrowUpRight aria-hidden="true" />
+              </a>
             </div>
-          </motion.div>
+            <div className={classes.credentials} aria-label="Professional profile">
+              <div>
+                <span>Academic background</span>
+                <strong>{degree ?? profile.positioning}</strong>
+              </div>
+              <div>
+                <span>Research record</span>
+                <strong>{publicationCount ? `${publicationCount} documented publications` : 'Applied research'}</strong>
+              </div>
+            </div>
+          </div>
+
+          <figure className={classes.portraitFrame}>
+            <div className={classes.imageCrop} data-conference-photo={portrait?.url === '/riad-02.jpg' || undefined}>
+              <Image
+                src={portrait?.url ?? '/riad-02.jpg'}
+                alt={`Portrait of ${profile.name}`}
+                width={portrait?.width ?? 824}
+                height={portrait?.height ?? 1035}
+                priority
+                sizes="(max-width: 48em) 100vw, (max-width: 62em) 48vw, 33vw"
+                className={classes.portrait}
+              />
+            </div>
+            <figcaption className={classes.caption}>
+              <span>{copy.heroFocusLabel}</span>
+              <strong>{profile.role}</strong>
+            </figcaption>
+          </figure>
         </div>
       </Container>
-    </Element>
+    </section>
   )
 }
 

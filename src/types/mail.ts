@@ -3,4 +3,5 @@ export type TMail = {
   subject: string
   text: string
   html?: string
+  replyTo?: string
 }

@@ -1,0 +1,7 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = { title: 'Admin', robots: { index: false, follow: false } }
+
+const AdminLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => children
+
+export default AdminLayout

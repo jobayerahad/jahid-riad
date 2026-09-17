@@ -1,72 +1,49 @@
-import { Container, Title, Text } from '@mantine/core'
-import { Element } from 'react-scroll'
-import { motion } from 'framer-motion'
+import { Container, Text, Title } from '@mantine/core'
+import { getPortfolioContent } from '@/data/portfolio'
+import SectionHeader from '@/components/ui/section-header'
+import Reveal from '@/components/ui/reveal'
 import classes from './styles.module.css'
+import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
-const experiences = [
-  {
-    period: '10th Nov 2025 - Present',
-    title: 'IT Business Analyst',
-    organization: 'UpSkill Consultancy INC, Jackson Heights, New York',
-    description:
-      'Bridge business needs and IT solutions through requirements analysis, stakeholder collaboration, data insights, and system implementation support.'
-  },
-  {
-    period: '10th Feb 2025 - 09th Nov 2025',
-    title: 'Trainee Business Analyst',
-    organization: 'Global systems LLC, Irving, Texas',
-    description:
-      'Analyze business processes, translate requirements into data-driven solutions, and support stakeholders with reports and dashboards.'
-  },
-  {
-    period: '2019 - 2020',
-    title: 'Computer Technology Lecturer',
-    organization: 'Institute of Science Trade and Technology (ISTT) Dhaka, Bangladesh',
-    description:
-      'Delivered computer science courses, updated curriculum, and mentored students in programming, systems, and career development.'
-  }
-]
+const ExperienceSection = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
+  const { experiences, copy } = content ?? (await getPortfolioContent())
+  const visibleExperiences = experiences.filter((item) => item.enabled)
 
-const Experience = () => {
   return (
-    <Element name="experience" className={classes.experience}>
+    <section id="experience" className={`section ${classes.experience}`} aria-labelledby="experience-title">
       <Container size="xl">
-        <motion.div
-          className={classes.sectionTitle}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <Title className={classes.title}>Experience</Title>
-          <Text className={classes.subtitle}>My professional journey and research experience</Text>
-        </motion.div>
-
-        <div className={classes.timeline}>
-          {experiences.map((exp, index) => (
-            <motion.div
-              key={index}
-              className={classes.timelineItem}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              viewport={{ once: true }}
-            >
-              <div className={classes.timelineDot}></div>
-              <div className={classes.timelineContent}>
-                <Text className={classes.timelineDate}>{exp.period}</Text>
-                <Title order={3} className={classes.timelineTitle}>
-                  {exp.title}
-                </Title>
-                <Text className={classes.timelineOrg}>{exp.organization}</Text>
-                <Text className={classes.timelineDescription}>{exp.description}</Text>
+        <SectionHeader
+          id="experience-title"
+          eyebrow={copy.experienceEyebrow}
+          title={copy.experienceTitle}
+          description={copy.experienceDescription}
+        />
+        <ol className={classes.list}>
+          {visibleExperiences.map((experience, index) => (
+            <Reveal as="li" className={classes.item} delay={index * 60} key={experience.id}>
+              <div className={classes.period}>
+                <time dateTime={experience.startDate}>{experience.period}</time>
+                {experience.current && <span className={classes.current}>Current role</span>}
               </div>
-            </motion.div>
+              <article className={classes.record}>
+                <Title order={3}>{experience.role}</Title>
+                <Text className={classes.organization}>{experience.organization}</Text>
+                <Text className={classes.summary}>{experience.summary}</Text>
+                {experience.highlights.length ? (
+                  <ul className={classes.highlights}>
+                    {experience.highlights.map((highlight) => (
+                      <li key={highlight}>{highlight}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
+              <Text className={classes.location}>{experience.location}</Text>
+            </Reveal>
           ))}
-        </div>
+        </ol>
       </Container>
-    </Element>
+    </section>
   )
 }
 
-export default Experience
+export default ExperienceSection

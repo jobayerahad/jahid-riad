@@ -1,0 +1,69 @@
+.footer {
+  padding: clamp(3rem, 5vw, 5rem) 0 1.5rem;
+  color: white;
+  background: #1c3028;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+}
+.inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+}
+.brand {
+  display: inline-flex;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  text-decoration: none;
+}
+.brand span {
+  color: #bcd1bf;
+}
+.identity p {
+  max-width: 34ch;
+  margin: 1rem 0 0;
+  color: rgb(255 255 255 / 65%);
+  font-size: 0.87rem;
+}
+.nav {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  color: rgb(255 255 255 / 78%);
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+.nav a:hover {
+  color: white;
+}
+.bottom {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(255 255 255 / 16%);
+}
+.bottom p {
+  color: rgb(255 255 255 / 60%);
+  font-size: 0.78rem;
+}
+@media (max-width: 48em) {
+  .inner {
+    grid-template-columns: 1fr;
+  }
+  .bottom {
+    grid-column: 1;
+    flex-wrap: wrap;
+    margin-top: 0;
+  }
+}

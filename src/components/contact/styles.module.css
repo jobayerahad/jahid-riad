@@ -1,37 +1,85 @@
-.sectionTitle {
-  text-align: center;
-  margin-bottom: 80px;
+.section {
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+  padding: var(--section-space) 0;
+  color: white;
+  background: var(--color-dark);
 }
-
-.contactBox {
-  align-items: center;
+.grid {
+  align-items: start;
 }
-
-.info p {
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.6;
+.info {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 34rem;
 }
-
-.form {
-  flex: 1;
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 40px;
-  border-radius: var(--radius);
-  backdrop-filter: blur(10px);
+.info h3 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 600;
 }
-
-@media (max-width: 992px) {
+.info > p {
+  max-width: 50ch;
+  margin: 0;
+  color: rgb(255 255 255 / 72%);
+}
+.detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+.detail > svg {
+  flex: 0 0 auto;
+  margin-top: 0.2rem;
+  color: #bcd3c0;
+  font-size: 1.25rem;
+}
+.detail div {
+  display: grid;
+  gap: 0.1rem;
+}
+.detail span {
+  color: rgb(255 255 255 / 65%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.detail div > p:last-child {
+  margin: 0;
+  color: white;
+}
+.formCard {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 4%);
+}
+.formBoundary,
+.formLoading {
+  min-height: 34rem;
+}
+.formLoading {
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  color: rgb(255 255 255 / 72%);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: var(--radius-sm);
+}
+.formCard :global(.mantine-Input-label) {
+  color: white;
+}
+.formCard :global(.mantine-Input-input) {
+  min-height: 44px;
+  border-color: rgb(255 255 255 / 35%);
+  background: #f7f7f2;
+}
+.formCard button {
+  min-height: 44px;
+}
+@media (max-width: 62em) {
   .info {
-    text-align: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .form {
-    padding: 30px 20px;
-  }
-
-  .info h3 {
-    font-size: 1.3rem;
+    max-width: none;
   }
 }

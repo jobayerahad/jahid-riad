@@ -1,24 +1,21 @@
 'use server'
 
 import nodemailer from 'nodemailer'
-import { TMail } from '@/types'
+import type { TMail } from '@/types'
 
-export const sendEmail = async ({ to, subject, text, html }: TMail) => {
+type MailCredentials = {
+  user: string
+  password: string
+}
+
+export const sendEmail = async ({ user, password }: MailCredentials, mail: TMail) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER, // your Gmail address
-      pass: process.env.GMAIL_APP_PASSWORD // App password from Google
-    }
+    auth: { user, pass: password }
   })
 
-  const mailOptions = {
-    from: `Jahid Riad Website <${process.env.GMAIL_USER}>`,
-    to,
-    subject,
-    text,
-    html
-  }
-
-  await transporter.sendMail(mailOptions)
+  await transporter.sendMail({
+    from: `Jahid Riad Website <${user}>`,
+    ...mail
+  })
 }

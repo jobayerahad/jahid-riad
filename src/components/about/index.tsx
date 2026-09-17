@@ -1,79 +1,56 @@
-import { Container, Title, Text, SimpleGrid } from '@mantine/core'
-import { Element } from 'react-scroll'
-import { motion } from 'framer-motion'
+import Image from 'next/image'
+import { Container, Text, Title } from '@mantine/core'
+import { getPortfolioContent } from '@/data/portfolio'
+import { getHeroIntroduction, getHeroPortrait } from '@/lib/portfolio-presentation'
+import SectionHeader from '@/components/ui/section-header'
+import Reveal from '@/components/ui/reveal'
 import classes from './styles.module.css'
+import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
-const stats = [
-  { number: '5+', label: 'Years Experience' },
-  { number: '12', label: 'Publications' }
-]
+const About = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
+  const snapshot = content ?? (await getPortfolioContent())
+  const { profile, copy, settings } = snapshot
+  const aboutImage = settings.aboutImage?.url !== getHeroPortrait(settings)?.url ? settings.aboutImage : undefined
+  const showSummary = getHeroIntroduction(snapshot) !== profile.summary
 
-const About = () => {
   return (
-    <Element name="about" className={classes.about}>
+    <section id="about" className={`section ${classes.about}`} aria-labelledby="about-title">
       <Container size="xl">
-        <motion.div
-          className={classes.sectionTitle}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <Title className={classes.title}>About Me</Title>
-          <Text className={classes.subtitle}>Learn more about my background, skills, and experience</Text>
-        </motion.div>
-
-        <div className={classes.content}>
-          <motion.div
-            className={classes.text}
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <Title order={3} className={classes.subheading}>
-              Creating Digital Experiences That Matter
-            </Title>
-            <Text className={classes.description}>
-              I&apos;m a passionate Computer Science graduate with expertise in web development, machine learning, and
-              software engineering. My approach combines technical expertise with creative problem-solving to deliver
-              solutions that are both functional and innovative.
-            </Text>
-            <Text className={classes.description}>
-              Now working at Global Systems LLC, I’m focused on building practical, forward-driven engineering solutions
-              while continuing to expand my expertise in advanced computing and problem-solving. I’m committed to taking
-              on challenging projects that push my skills and create meaningful impact.
-            </Text>
-
-            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing={30} className={classes.stats}>
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  className={classes.stat}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Text className={classes.statNumber}>{stat.number}</Text>
-                  <Text className={classes.statLabel}>{stat.label}</Text>
-                </motion.div>
-              ))}
-            </SimpleGrid>
-          </motion.div>
-
-          <motion.div
-            className={classes.image}
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            <img src="/riad-02.jpg" alt="Jahid Alam Riad" className={classes.aboutImage} />
-          </motion.div>
+        <div className={classes.layout} data-image={aboutImage ? true : undefined}>
+          <div className={classes.label}>{copy.aboutEyebrow === 'Current focus' ? 'Profile' : copy.aboutEyebrow}</div>
+          <Reveal className={classes.copy}>
+            <SectionHeader id="about-title" title={copy.aboutTitle} />
+            <Text className={classes.lead}>{copy.aboutBody}</Text>
+            {showSummary ? <Text className={classes.body}>{profile.summary}</Text> : null}
+            <div className={classes.principles}>
+              <div>
+                <Title order={3}>{copy.principleOneTitle}</Title>
+                <Text>{copy.principleOneText}</Text>
+              </div>
+              <div>
+                <Title order={3}>{copy.principleTwoTitle}</Title>
+                <Text>{copy.principleTwoText}</Text>
+              </div>
+            </div>
+          </Reveal>
+          {aboutImage ? (
+            <figure className={classes.imagePanel}>
+              <Image
+                src={aboutImage.url}
+                alt={copy.aboutImageAlt}
+                width={aboutImage.width ?? 824}
+                height={aboutImage.height ?? 1035}
+                sizes="(max-width: 48em) 100vw, 24vw"
+                className={classes.image}
+              />
+              <figcaption>
+                {copy.aboutCaptionLabel} {profile.location}
+              </figcaption>
+            </figure>
+          ) : null}
         </div>
       </Container>
-    </Element>
+    </section>
   )
 }
 

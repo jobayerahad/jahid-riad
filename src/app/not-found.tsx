@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Container, Title, Text, Button, SimpleGrid, Group, Flex } from '@mantine/core'
 import { IoHome } from 'react-icons/io5'
@@ -24,7 +23,7 @@ const NotFound = () => {
             </Text>
 
             <Group>
-              <Button component={Link} href="/" size="md" leftSection={<IoHome />}>
+              <Button component="a" href="/" size="md" leftSection={<IoHome />}>
                 Go Home
               </Button>
 

@@ -1,166 +1,49 @@
-import { useTransition } from 'react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
-import { Element } from 'react-scroll'
-import {
-  Container,
-  Title,
-  Text,
-  TextInput,
-  Textarea,
-  Button,
-  Stack,
-  Group,
-  ActionIcon,
-  Anchor,
-  SimpleGrid
-} from '@mantine/core'
-import { motion } from 'framer-motion'
-import { useForm } from '@mantine/form'
-import { showNotification } from '@mantine/notifications'
-import { yupResolver } from 'mantine-form-yup-resolver'
-
-import { FaPaperPlane } from 'react-icons/fa'
-import { FiMail } from 'react-icons/fi'
-import { MdOutlinePhone } from 'react-icons/md'
-import { BsPinMapFill } from 'react-icons/bs'
-
+import { Container, SimpleGrid, Text, Title } from '@mantine/core'
+import { FiMapPin } from 'react-icons/fi'
+import SectionHeader from '@/components/ui/section-header'
+import SocialLinks from '@/components/ui/social-links'
+import Reveal from '@/components/ui/reveal'
+import { getPortfolioContent } from '@/data/portfolio'
+import LazyContactForm from './lazy-form'
 import classes from './styles.module.css'
-import { sendMessage } from '@/actions/contact'
-import { getMessage } from '@/utils/notification'
-import { TContactForm } from '@/types'
-import { contactSchema } from '@/schemas'
+import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
-const Contact = () => {
-  const [isLoading, startTransition] = useTransition()
-  const { executeRecaptcha } = useGoogleReCaptcha()
-
-  const form = useForm<TContactForm>({
-    validate: yupResolver(contactSchema),
-    initialValues: {
-      name: '',
-      email: '',
-      subject: '',
-      message: '',
-      token: ''
-    }
-  })
-
-  const handleSubmit = (values: TContactForm) =>
-    startTransition(async () => {
-      if (!executeRecaptcha) {
-        showNotification({
-          message: 'Recaptcha not yet available',
-          color: 'red'
-        })
-        return
-      }
-
-      const token = await executeRecaptcha('contact_form')
-      values.token = token
-      const res = await sendMessage({ ...values, token })
-      showNotification(getMessage(res))
-
-      if (res.status === 200) form.reset()
-    })
+const Contact = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
+  const { profile, copy } = content ?? (await getPortfolioContent())
 
   return (
-    <Element name="contact" className="section bg-dark">
+    <section id="contact" className={classes.section} aria-labelledby="contact-title">
       <Container size="xl">
-        <motion.div
-          className={classes.sectionTitle}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <Title className="title">Get In Touch</Title>
-          <Text className="subtitle">Let&apos;s discuss research opportunities or collaborations</Text>
-        </motion.div>
+        <SectionHeader
+          id="contact-title"
+          eyebrow={copy.contactEyebrow}
+          title={copy.contactTitle}
+          description={copy.contactDescription}
+          inverse
+        />
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} className={classes.contactBox}>
-          <motion.div
-            className={classes.info}
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Title order={3} mb="lg">
-              Let&apos;s Start a Conversation
-            </Title>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={{ base: 36, md: 64 }} className={classes.grid}>
+          <Reveal className={classes.info} direction="left">
+            <Title order={3}>{copy.contactPanelTitle}</Title>
+            <Text>{copy.contactPrivacyCopy}</Text>
 
-            <Text mb="xl">
-              I&apos;m always interested in new research opportunities, collaborations, or discussing innovative
-              projects. Whether you have a proposal or just want to connect, feel free to reach out!
-            </Text>
+            <div className={classes.detail}>
+              <FiMapPin aria-hidden="true" />
+              <div>
+                <Text component="span">Location</Text>
+                <Text>{profile.location}</Text>
+              </div>
+            </div>
 
-            {/* <Stack>
-              <Group>
-                <ActionIcon size="xl" radius="xl">
-                  <FiMail size={20} />
-                </ActionIcon>
+            <SocialLinks links={profile.socialLinks} variant="dark" />
+          </Reveal>
 
-                <div>
-                  <Title order={4}>Email</Title>
-                  <Anchor href="mailto:jahidalamriad@gmail.com">jahidalamriad@gmail.com</Anchor>
-                </div>
-              </Group>
-
-              <Group>
-                <ActionIcon size="xl" radius="xl">
-                  <MdOutlinePhone size={20} />
-                </ActionIcon>
-
-                <div>
-                  <Title order={4}>Phone</Title>
-                  <Anchor href="tel: +12025280333">+1 202-528-0333</Anchor>
-                </div>
-              </Group>
-
-              <Group>
-                <ActionIcon size="xl" radius="xl">
-                  <BsPinMapFill size={20} />
-                </ActionIcon>
-
-                <div>
-                  <Title order={4}>Location</Title>
-                  <Text>Washington, DC, USA</Text>
-                </div>
-              </Group>
-            </Stack> */}
-          </motion.div>
-
-          <motion.div
-            className={classes.form}
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <form onSubmit={form.onSubmit(handleSubmit)}>
-              <Stack>
-                <TextInput label="Your Name" placeholder="Enter your name" {...form.getInputProps('name')} />
-
-                <TextInput label="Your Email" placeholder="Enter your email" {...form.getInputProps('email')} />
-
-                <TextInput label="Subject" placeholder="Enter subject" {...form.getInputProps('subject')} />
-
-                <Textarea
-                  label="Your Message"
-                  rows={4}
-                  placeholder="Enter your message"
-                  {...form.getInputProps('message')}
-                />
-              </Stack>
-
-              <Button type="submit" mt="lg" rightSection={<FaPaperPlane />} loading={isLoading}>
-                Send Message
-              </Button>
-            </form>
-          </motion.div>
+          <Reveal direction="right" delay={80}>
+            <LazyContactForm siteKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''} />
+          </Reveal>
         </SimpleGrid>
       </Container>
-    </Element>
+    </section>
   )
 }
 
