@@ -22,10 +22,10 @@ const localMedia = [
     kind: 'IMAGE',
     secureUrl: '/riad-01.jpg',
     resourceType: 'image',
-    width: 959,
-    height: 959,
+    width: 472,
+    height: 472,
     originalFilename: 'riad-01.jpg',
-    altText: 'Professional portrait'
+    altText: 'Formal portrait of Md. Jahid Alam Riad'
   },
   {
     id: 'local-about',
@@ -36,7 +36,18 @@ const localMedia = [
     width: 824,
     height: 1035,
     originalFilename: 'riad-02.jpg',
-    altText: 'Professional conference photograph'
+    altText: 'Md. Jahid Alam Riad at an applied AI conference in Washington, DC'
+  },
+  {
+    id: 'local-personal',
+    source: 'LOCAL',
+    kind: 'IMAGE',
+    secureUrl: '/riad-03.jpg',
+    resourceType: 'image',
+    width: 959,
+    height: 959,
+    originalFilename: 'riad-03.jpg',
+    altText: 'Md. Jahid Alam Riad outdoors on a snowy Washington street'
   },
   {
     id: 'local-logo',

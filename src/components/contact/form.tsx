@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Alert, Button, Stack, TextInput, Textarea } from '@mantine/core'
 import { schemaResolver, useForm } from '@mantine/form'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
-import { FaPaperPlane } from 'react-icons/fa'
+import { HiOutlinePaperAirplane } from 'react-icons/hi2'
 import { sendMessage } from '@/actions/contact'
 import { contactSchema, type ContactInput } from '@/schemas/contact'
 import type { ContactResult } from '@/types'
@@ -89,7 +89,7 @@ const ContactForm = ({ configured }: Props) => {
             required
             label="Message"
             placeholder="Share the context, goal, and any useful timeline."
-            minRows={6}
+            minRows={4}
             autosize
             key={form.key('message')}
             {...form.getInputProps('message')}
@@ -110,7 +110,7 @@ const ContactForm = ({ configured }: Props) => {
           <Button
             type="submit"
             size="md"
-            rightSection={<FaPaperPlane aria-hidden="true" />}
+            rightSection={<HiOutlinePaperAirplane aria-hidden="true" />}
             loading={pending}
             disabled={!configured}
           >

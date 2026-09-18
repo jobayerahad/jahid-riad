@@ -20,15 +20,15 @@ export const defaultSiteSettings: SiteSettingsInput = {
 }
 
 export const defaultContentCopy: ContentCopyInput = {
-  heroHeading: 'Business analysis, software engineering',
-  heroAccent: 'and applied AI research.',
+  heroHeading: 'Turning complex problems into',
+  heroAccent: 'systems that work.',
   heroIntroduction:
-    "I'm {name}, an {role} working across requirements, software systems, data, and applied AI research.",
-  heroPrimaryLabel: 'Explore research',
-  heroPrimaryHref: '#publications',
-  heroSecondaryLabel: 'LinkedIn',
-  heroSecondaryHref: 'https://www.linkedin.com/in/md-jahid-alam-riad-6937aa11a/',
-  heroFocusLabel: 'Current focus',
+    'Business analyst, software engineer, and applied AI researcher working across business needs, technology, data, and research.',
+  heroPrimaryLabel: 'Explore selected work',
+  heroPrimaryHref: '#work',
+  heroSecondaryLabel: 'View research',
+  heroSecondaryHref: '#research',
+  heroFocusLabel: 'Business · Technology · Research',
   aboutEyebrow: 'Profile',
   aboutTitle: 'Connecting decisions, systems, and research',
   aboutBody:

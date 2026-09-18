@@ -14,7 +14,7 @@
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 600;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   line-height: 1;
   text-decoration: none;
 }
@@ -40,8 +40,18 @@
   font-size: 0.86rem;
   text-decoration: none;
 }
+.nav svg {
+  width: 14px;
+  height: 14px;
+  margin-left: 0.45rem;
+  color: rgb(255 255 255 / 42%);
+  transition: transform var(--transition-fast);
+}
 .nav a:hover {
   color: white;
+}
+.nav a:hover svg {
+  transform: translateX(3px);
 }
 .bottom {
   grid-column: 1 / -1;
@@ -58,12 +68,18 @@
   font-size: 0.78rem;
 }
 @media (max-width: 48em) {
+  .footer {
+    padding-top: 2.5rem;
+  }
   .inner {
     grid-template-columns: 1fr;
+  }
+  .nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .bottom {
     grid-column: 1;
     flex-wrap: wrap;
-    margin-top: 0;
+    margin-top: 0.5rem;
   }
 }

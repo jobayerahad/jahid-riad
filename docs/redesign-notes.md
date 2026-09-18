@@ -2,35 +2,49 @@
 
 ## Audit
 
-The repository already contained an in-progress CMS refactor. Public content is read from a published snapshot, with repository defaults in `src/data` and `src/data/cms-defaults.ts` when the database is unavailable. The CMS draft, active revision, and admin preview are separate states. The live revision still contained the earlier hero slogan and winter selfie; editing fallback defaults alone did not change the published page.
+The previous homepage had already moved away from a chronological résumé, but it overcorrected into a large editorial experience. The hero headline reached almost 9rem, the opening filled a viewport, selected-work and research visuals approached 40rem in height, and an additional point-of-view chapter lengthened the page. Several sections repeated the same idea through an introduction, detail copy, evidence, and a link. The result was visually dramatic but slow to scan.
 
-The public presentation mixed a slogan-first hero, overlapping highlight cards, a dark decorative timeline, research cards, skill pills, and education cards. The same facts appeared in several visual treatments. The hero copy repeated the name and role; about copy repeated the summary. The header tracked scroll and section visibility with client-side listeners despite the site needing only straightforward navigation. Disabled social links were not filtered by the shared links component. Publication structured data had a hardcoded site URL and IEEE publisher for every future CMS record.
+The content architecture does not require that presentation. Public data comes from a published Prisma revision, falls back to a validated repository snapshot, and is passed into the same `Home` component for signed-in draft and historical admin preview. Experience, education, publications, capabilities, copy, profile data, and media remain available in the snapshot. The contact action, metadata, full publication index, and reCAPTCHA provider are separate from homepage composition.
 
-The contact submission and reCAPTCHA path, CMS publication workflow, admin preview, responsive drawer, and dynamic metadata were working and remain in place. There is no `framer-motion` or `motion` dependency in this checkout; the existing reveal component uses an IntersectionObserver and CSS transitions with reduced-motion support.
+## Refined direction
 
-## Design read and references
+The homepage is now a compact professional portfolio with controlled typography, concise copy, and photography that carries more visual weight. It keeps the warm neutral canvas, dark ink, restrained green, Inter, and Space Grotesk. Borders are used sparingly to establish rhythm; there are no skill pills, glass panels, gradients, shadows, or stacks of rounded cards.
 
-Reading this as an editorial professional portfolio for recruiters, research collaborators, and senior technology professionals. Typography, an evidence-led research list, and precise chronology carry the visual hierarchy. The palette is warm paper, dark forest, and restrained green accents.
+The main type scale is capped at 4rem on desktop and 2.75rem on mobile. Section headings stay around 2–2.5rem, body copy stays around 1–1.1rem, and major section spacing is roughly 5–6.5rem. Tablet layouts remain art-directed instead of collapsing early into a single column.
 
-- [Slack executive biography](https://mobbin.com/sites/sections/1bafeb86-728a-425b-aa78-c5e680e7f640): a rectangular portrait beside factual identity and biography informed the name-first hero.
-- [Waabi publications](https://mobbin.com/sites/sections/9aaa2fb5-80ec-483f-98b3-e3dcf5217ffb) and [OpenAI index](https://mobbin.com/sites/sections/1e4d6891-db02-4b62-8ae8-8addb56aa87e): paper titles, dates, author/venue metadata, and rules informed the research rows and dedicated index.
-- [Webflow careers](https://mobbin.com/sites/sections/cd3b84b1-6a90-4caf-a6a7-82c1a1522786): aligned role, location, and category information informed the experience and education records.
-- [Analogue Agency capabilities](https://mobbin.com/sites/sections/7063e124-d7b5-4fe4-9797-b318a5be20d1): typographic capability groups informed the skills section.
-- [Trawelt contact](https://mobbin.com/sites/sections/e471ecd9-0f95-42a4-b93f-a2a9ae0c991b) and [Shupatto footer](https://mobbin.com/sites/sections/471f17eb-e5b3-4785-8cd9-333119653eac): concise invitation and quiet footer hierarchy informed the closing sections.
-- [Open mobile menu](https://mobbin.com/screens/c59ad58b-6c05-4fae-a3ec-18897e0fbae1): large, plain menu targets informed the navigation drawer.
+## Homepage architecture
 
-These references guided hierarchy and density. Layout, palette, copy, and behavior were adapted to the repository content.
+The public homepage now follows:
 
-## Content and implementation choices
+1. Compact point-of-view hero
+2. Three selected work themes
+3. Three selected research entries
+4. Short about
+5. Contact
+6. Footer
 
-The narrative is identity, profile, professional record, selected research, education, capabilities, professional learning, contact. The dedicated publications page retains all enabled records, including nonfeatured papers. Public section components remain server components. Client JavaScript is confined to navigation, reveal behavior, and the lazy contact form.
+The hero removes credentials, statistics, academic summaries, and publication counts. Known legacy/default CMS copy is shortened by `src/lib/portfolio-presentation.ts`; custom CMS-authored copy remains authoritative. Its two calls to action lead directly to work and research.
 
-A presentation helper recognizes the exact old published hero copy and local winter portrait, replacing the slogan with the published profile positioning and using the already published conference photograph. Other CMS-authored hero text and media remain authoritative. The about photograph appears only when the CMS supplies an image different from the effective hero photograph. Disabled social links are filtered. The removed highlights component duplicated facts already visible in the hero. Local Inter and Space Grotesk subsets make builds independent of Google Fonts connectivity.
+Selected work uses three concise themes derived from enabled experience, capability, and featured publication records. Each item has one category line, a title, one short sentence, and a link. It does not add employers, metrics, projects, or outcomes. The full experience, education, capabilities, and professional learning record remains available on `/profile`.
 
-## Follow-up
+Selected research shows at most three featured papers with year, venue, title, a short context line, and a link. Dense author lists and abstracts stay on `/publications`, where the existing URLs, metadata, and JSON-LD remain intact.
 
-The older committed `src/config/data.ts` listed four courses/reviewing items and language proficiency. Those are now held in one `src/data/professional-learning.ts` source and shown as professional learning, with no dates or additional achievement claims. The same old source listed three conference names, a public phone/email, C/C++ skills, and a 2025 year for the AI-tweets paper. Conference participation, direct contact details, and older skill claims need current verification before they are advertised; the newer publication record supplies 2024 for that paper.
+The navigation is limited to Work, Research, About, and Contact. All three repository photographs have distinct roles: the conference image is the professional hero, the Washington winter image gives About a personal and environmental moment, and the formal studio portrait acts as a restrained sign-off beside Contact. Each uses its own responsive crop and focal position.
 
-The archived conference names are Third International Conference on Artificial Intelligence and Machine Learning Applications (AIMLA); First International Conference on Emerging Technologies and Computing Innovations (ICETCI-2025); and IEEE Authorship and Open Access Symposium: Tips and Best Practices to Get Published from IEEE Editors. The old public contact details were +1 202-528-0333 and jahidalamriad@gmail.com. They remain recoverable in the previous commit and are not printed on the live site, which uses the newer secure contact workflow. The older skill list also contained C, C++, and quantitative/qualitative analysis; these were not promoted into the current capability claims without verification.
+The interface uses Heroicons for functional actions, section cues, metadata, location, and contact controls; LinkedIn retains its recognizable brand mark. Social links combine a compact icon container with a visible label. A restrained radius scale applies 20px image corners, 16px major surfaces, 10px controls, and 8px small icon controls.
 
-The CMS editor still has fields inherited from the earlier visual system. Its copy can be revised at the next content publish. Professional learning is repository-backed rather than CMS-managed and could be moved into the CMS if it needs frequent editing. The public CV asset is not configured in the current CMS snapshot, so there is no download CTA.
+## Motion and interaction
+
+Framer Motion provides one shared motion system in `src/components/ui/motion-variants.ts` and `src/components/ui/reveal.tsx`. It defines fade-up, fade-in, horizontal slide, image reveal, and stagger-container variants with a consistent easing curve and 480–680ms entrance timing. The wrappers honor `prefers-reduced-motion` and leave the data-fetching homepage sections as server components.
+
+The hero uses a short staggered load sequence and a scale/fade image entrance. Work and research items reveal in groups and are clickable across their full surface. Their hover states use transform, opacity, color, and background changes. About and Contact use offset timing between images and copy. The sticky header gains a scroll treatment and an active section indicator, while buttons, arrows, social links, and images provide restrained hover and press feedback.
+
+## CMS and application boundaries
+
+No schema or Prisma model changed. No draft was published and no production data was touched. `Home` still accepts an optional snapshot, so admin preview uses draft or historical content without a second fetch. The public page, profile page, and publication page each fetch the published snapshot once and pass it to their sections.
+
+The contact workflow, lazy reCAPTCHA loading, metadata generation, social links, publication structured data, skip link, focus styles, heading hierarchy, keyboard navigation, and reduced-motion behavior remain in place. `/profile` remains in the sitemap.
+
+## Content follow-up
+
+The selected-work visuals are abstract compositions because the repository contains portraits and publication data but no verified project screenshots or case-study media. Approved project imagery and outcome details can replace them later without changing the page structure.

@@ -1,38 +1,76 @@
-import { Container } from '@mantine/core'
-import { HiArrowRight } from 'react-icons/hi2'
+import Link from 'next/link'
+import { Container, Text, Title } from '@mantine/core'
+import { HiArrowRight, HiArrowUpRight, HiOutlineBeaker } from 'react-icons/hi2'
 import { getPortfolioContent } from '@/data/portfolio'
-import PublicationCard from '@/components/publication-card'
-import SectionHeader from '@/components/ui/section-header'
-import Reveal from '@/components/ui/reveal'
+import Reveal, { MotionGroup } from '@/components/ui/reveal'
 import classes from './styles.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
+const concise = (value: string, limit = 138) => {
+  if (value.length <= limit) return value
+  const excerpt = value.slice(0, limit)
+  const lastSpace = excerpt.lastIndexOf(' ')
+  return `${excerpt.slice(0, lastSpace > 90 ? lastSpace : limit).trimEnd()}…`
+}
+
 const Publications = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
   const { publications, copy } = content ?? (await getPortfolioContent())
-  const featuredPublications = publications.filter((publication) => publication.featured && publication.enabled)
+  const featuredPublications = publications
+    .filter((publication) => publication.featured && publication.enabled)
+    .slice(0, 3)
 
   return (
-    <section id="publications" className={`section ${classes.publications}`} aria-labelledby="publications-title">
+    <section id="research" className={classes.section} aria-labelledby="research-title">
+      <span id="publications" className={classes.legacyAnchor} aria-hidden="true" />
       <Container size="xl">
-        <SectionHeader
-          id="publications-title"
-          eyebrow={copy.publicationsEyebrow}
-          title={copy.publicationsTitle}
-          description={copy.publicationsDescription}
-        />
-        <div className={classes.list}>
-          {featuredPublications.map((publication, index) => (
-            <Reveal key={publication.id} delay={index * 50}>
-              <PublicationCard publication={publication} />
-            </Reveal>
-          ))}
+        <div className={classes.layout}>
+          <Reveal as="header" className={classes.heading} direction="left">
+            <Text className={classes.eyebrow}>
+              <HiOutlineBeaker aria-hidden="true" /> {copy.publicationsEyebrow}
+            </Text>
+            <Title order={2} id="research-title">
+              Selected research
+            </Title>
+            <Text>Applied AI research across language, culture, and human-centered systems.</Text>
+            <Link href="/publications" className={classes.indexLink}>
+              {copy.publicationsActionLabel} <HiArrowRight aria-hidden="true" />
+            </Link>
+          </Reveal>
+
+          <MotionGroup className={classes.list} stagger={0.09}>
+            {featuredPublications.map((publication, index) => {
+              const destination = publication.paperUrl || publication.scholarUrl
+              const context = publication.abstract ?? `Research spanning ${publication.topics.join(', ')}.`
+              const venue = publication.venue?.replace(new RegExp(`^${publication.year}\\s*`), '')
+
+              return (
+                <Reveal as="article" className={classes.item} grouped key={publication.id}>
+                  <a
+                    href={destination}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={classes.itemLink}
+                    aria-label={`View research: ${publication.title}`}
+                  >
+                    <Text className={classes.number}>0{index + 1}</Text>
+                    <div className={classes.copy}>
+                      <Text className={classes.meta}>
+                        <time dateTime={String(publication.year)}>{publication.year}</time>
+                        {venue ? ` · ${venue}` : ''}
+                      </Text>
+                      <Title order={3}>{publication.title}</Title>
+                      <Text className={classes.context}>{concise(context)}</Text>
+                    </div>
+                    <span className={classes.paperLink}>
+                      <span>View</span>
+                      <HiArrowUpRight aria-hidden="true" />
+                    </span>
+                  </a>
+                </Reveal>
+              )
+            })}
+          </MotionGroup>
         </div>
-        <Reveal className={classes.action}>
-          <a href="/publications" className={classes.allLink}>
-            {copy.publicationsActionLabel}
-            <HiArrowRight aria-hidden="true" />
-          </a>
-        </Reveal>
       </Container>
     </section>
   )

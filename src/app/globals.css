@@ -12,14 +12,18 @@
   --color-accent: #c0d1b5;
   --color-border: #d8ddd4;
   --shadow-soft: 0 18px 48px rgb(20 40 30 / 8%);
-  --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-small: 8px;
+  --radius-control: 10px;
+  --radius-card: 16px;
+  --radius-image: 20px;
+  --radius-sm: var(--radius-small);
+  --radius-md: var(--radius-card);
   --header-height: 76px;
-  --section-space: clamp(4.5rem, 8vw, 8rem);
+  --section-space: clamp(5rem, 7vw, 6.5rem);
   --content-width: 76rem;
   --motion-fast: 160ms;
-  --motion-normal: 240ms;
-  --motion-slow: 480ms;
+  --motion-normal: 300ms;
+  --motion-slow: 560ms;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-distance: 16px;
   --transition-fast: var(--motion-fast) var(--motion-ease);
@@ -28,11 +32,13 @@
   box-sizing: border-box;
 }
 html {
+  overflow-x: clip;
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--header-height) + 1rem);
 }
 body {
   margin: 0;
+  overflow-x: clip;
   color: var(--color-ink);
   background: var(--color-canvas);
   font-family: var(--font-inter), sans-serif;
@@ -87,7 +93,7 @@ textarea {
   padding: 0.75rem 1rem;
   color: white;
   background: var(--color-primary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-small);
   transform: translateY(-160%);
 }
 .skipLink:focus {

@@ -1,0 +1,78 @@
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 40px;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.iconBox {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  transition:
+    color var(--motion-normal) var(--motion-ease),
+    background-color var(--motion-normal) var(--motion-ease),
+    transform var(--motion-normal) var(--motion-ease);
+}
+.iconBox svg {
+  width: 17px;
+  height: 17px;
+}
+.arrow {
+  width: 14px;
+  height: 14px;
+  color: var(--color-muted);
+  transition: transform var(--transition-fast);
+}
+.links a:hover {
+  color: var(--color-primary);
+}
+.links a:hover .iconBox,
+.links a:focus-visible .iconBox {
+  color: white;
+  background: var(--color-primary);
+  transform: translateY(-2px);
+}
+.links a:hover .arrow {
+  transform: translate(2px, -2px);
+}
+.links[data-variant='dark'] a {
+  color: rgb(255 255 255 / 78%);
+}
+.links[data-variant='dark'] .iconBox {
+  border-color: rgb(255 255 255 / 24%);
+}
+.links[data-variant='dark'] .arrow {
+  color: rgb(255 255 255 / 48%);
+}
+.links[data-variant='dark'] a:hover {
+  color: white;
+}
+.links[data-variant='dark'] a:hover .iconBox,
+.links[data-variant='dark'] a:focus-visible .iconBox {
+  color: var(--color-dark);
+  background: #dce8df;
+}
+@media (prefers-reduced-motion: reduce) {
+  .iconBox,
+  .arrow {
+    transition: none;
+  }
+  .links a:hover .iconBox,
+  .links a:focus-visible .iconBox,
+  .links a:hover .arrow {
+    transform: none;
+  }
+}

@@ -1,53 +1,60 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { Container, Text, Title } from '@mantine/core'
+import { HiArrowRight, HiOutlineUser } from 'react-icons/hi2'
 import { getPortfolioContent } from '@/data/portfolio'
-import { getHeroIntroduction, getHeroPortrait } from '@/lib/portfolio-presentation'
-import SectionHeader from '@/components/ui/section-header'
-import Reveal from '@/components/ui/reveal'
+import { getAboutPortrait, getAboutSummary } from '@/lib/portfolio-presentation'
+import Reveal, { MotionGroup } from '@/components/ui/reveal'
 import classes from './styles.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
 const About = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
   const snapshot = content ?? (await getPortfolioContent())
   const { profile, copy, settings } = snapshot
-  const aboutImage = settings.aboutImage?.url !== getHeroPortrait(settings)?.url ? settings.aboutImage : undefined
-  const showSummary = getHeroIntroduction(snapshot) !== profile.summary
+  const portrait = getAboutPortrait(settings)
 
   return (
-    <section id="about" className={`section ${classes.about}`} aria-labelledby="about-title">
+    <section id="about" className={classes.section} aria-labelledby="about-title">
       <Container size="xl">
-        <div className={classes.layout} data-image={aboutImage ? true : undefined}>
-          <div className={classes.label}>{copy.aboutEyebrow === 'Current focus' ? 'Profile' : copy.aboutEyebrow}</div>
-          <Reveal className={classes.copy}>
-            <SectionHeader id="about-title" title={copy.aboutTitle} />
-            <Text className={classes.lead}>{copy.aboutBody}</Text>
-            {showSummary ? <Text className={classes.body}>{profile.summary}</Text> : null}
-            <div className={classes.principles}>
-              <div>
-                <Title order={3}>{copy.principleOneTitle}</Title>
-                <Text>{copy.principleOneText}</Text>
+        <div className={classes.layout}>
+          {portrait ? (
+            <Reveal as="article" className={classes.imagePanel} variant="image">
+              <div className={classes.imageFrame} style={{ position: 'relative' }}>
+                <Image
+                  src={portrait.url}
+                  alt={portrait.altText ?? `${profile.name} outdoors in Washington, DC`}
+                  fill
+                  sizes="(max-width: 42em) 100vw, 42vw"
+                  className={classes.image}
+                />
               </div>
-              <div>
-                <Title order={3}>{copy.principleTwoTitle}</Title>
-                <Text>{copy.principleTwoText}</Text>
-              </div>
-            </div>
-          </Reveal>
-          {aboutImage ? (
-            <figure className={classes.imagePanel}>
-              <Image
-                src={aboutImage.url}
-                alt={copy.aboutImageAlt}
-                width={aboutImage.width ?? 824}
-                height={aboutImage.height ?? 1035}
-                sizes="(max-width: 48em) 100vw, 24vw"
-                className={classes.image}
-              />
-              <figcaption>
-                {copy.aboutCaptionLabel} {profile.location}
-              </figcaption>
-            </figure>
+              <Text component="p">
+                {profile.shortName} · {profile.location}
+              </Text>
+            </Reveal>
           ) : null}
+
+          <MotionGroup className={classes.copy} stagger={0.08}>
+            <Reveal grouped direction="right">
+              <Text className={classes.eyebrow}>
+                <HiOutlineUser aria-hidden="true" />
+                {copy.aboutEyebrow === 'Current focus' ? 'About' : copy.aboutEyebrow}
+              </Text>
+            </Reveal>
+            <Reveal grouped direction="right">
+              <Title order={2} id="about-title">
+                Connecting the work.
+              </Title>
+            </Reveal>
+            <Reveal grouped direction="right">
+              <Text className={classes.lead}>{getAboutSummary(snapshot)}</Text>
+            </Reveal>
+            <Reveal grouped direction="right">
+              <Link href="/profile" className={classes.link}>
+                View experience and background <HiArrowRight aria-hidden="true" />
+              </Link>
+            </Reveal>
+          </MotionGroup>
         </div>
       </Container>
     </section>
