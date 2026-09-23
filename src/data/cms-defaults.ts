@@ -30,8 +30,7 @@ export const defaultSiteSettings: SiteSettingsInput = {
 export const defaultHeroCopy: HeroCopyInput = {
   heading: 'Turning complex problems into',
   accent: 'systems that work.',
-  introduction:
-    'Business analyst, software engineer, and applied AI researcher connecting people, data, and systems.',
+  introduction: 'Business analyst, software engineer, and applied AI researcher connecting people, data, and systems.',
   primaryLabel: 'Explore work',
   primaryHref: '#work',
   secondaryLabel: 'View research',

@@ -22,9 +22,7 @@ const createJsonLd = (content: Awaited<ReturnType<typeof getPortfolioContent>>) 
         sameAs: content.profile.socialLinks
           .filter((link) => link.enabled && link.href.startsWith('http'))
           .map((link) => link.href),
-        worksFor: currentRole
-          ? { '@type': 'Organization', name: currentRole.organization }
-          : undefined,
+        worksFor: currentRole ? { '@type': 'Organization', name: currentRole.organization } : undefined,
         alumniOf: education.map((item) => ({
           '@type': 'EducationalOrganization',
           name: item.institution

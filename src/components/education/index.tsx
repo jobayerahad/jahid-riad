@@ -1,5 +1,5 @@
-import { Container, Text, Title } from '@mantine/core'
 import { getPortfolioContent } from '@/data/portfolio'
+import { Container } from '@/components/ui/container'
 import SectionHeader from '@/components/ui/section-header'
 import Reveal from '@/components/ui/reveal'
 import classes from './styles.module.css'
@@ -22,15 +22,15 @@ const EducationSection = async ({ content }: { content?: PublishedPortfolioSnaps
         <div className={classes.list}>
           {education.map((item) => (
             <Reveal as="article" className={classes.row} key={item.id}>
-              <Text className={classes.period}>
+              <p className={classes.period}>
                 {item.startYear} – {item.endYear}
-              </Text>
+              </p>
               <div className={classes.content}>
-                <Title order={3}>{item.degree}</Title>
-                <Text className={classes.institution}>{item.institution}</Text>
-                <Text className={classes.detail}>{item.detail}</Text>
+                <h3>{item.degree}</h3>
+                <p className={classes.institution}>{item.institution}</p>
+                <p className={classes.detail}>{item.detail}</p>
               </div>
-              <Text className={classes.location}>{item.location}</Text>
+              <p className={classes.location}>{item.location}</p>
             </Reveal>
           ))}
         </div>

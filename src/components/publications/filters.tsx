@@ -1,8 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Button, Group, Select, Text } from '@mantine/core'
 import PublicationCard from '@/components/publication-card'
+import { Button } from '@/components/ui/button'
+import { Combobox } from '@/components/ui/combobox'
+import { Label } from '@/components/ui/label'
 import { formatPublicationType } from '@/lib/bibtex'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 import classes from './filters.module.css'
@@ -20,10 +22,7 @@ const PublicationFilters = ({ publications }: Props) => {
     () => [...new Set(publications.map((item) => String(item.year)))].sort((a, b) => Number(b) - Number(a)),
     [publications]
   )
-  const types = useMemo(
-    () => [...new Set(publications.map((item) => item.type))].sort(),
-    [publications]
-  )
+  const types = useMemo(() => [...new Set(publications.map((item) => item.type))].sort(), [publications])
   const topics = useMemo(
     () => [...new Set(publications.flatMap((item) => item.topics))].sort((a, b) => a.localeCompare(b)),
     [publications]
@@ -44,48 +43,54 @@ const PublicationFilters = ({ publications }: Props) => {
 
   return (
     <div>
-      <Group className={classes.filters} gap="sm" align="flex-end">
-        <Select
-          label="Year"
-          placeholder="All years"
-          data={years}
-          value={year}
-          onChange={setYear}
-          clearable
-          searchable
-        />
-        <Select
-          label="Type"
-          placeholder="All types"
-          data={types.map((value) => ({ value, label: formatPublicationType(value) }))}
-          value={type}
-          onChange={setType}
-          clearable
-          searchable
-        />
-        <Select
-          label="Topic"
-          placeholder="All topics"
-          data={topics}
-          value={topic}
-          onChange={setTopic}
-          clearable
-          searchable
-        />
+      <div className={`${classes.filters} flex flex-wrap items-end gap-3`}>
+        <div className="grid min-w-[10rem] flex-1 gap-1.5">
+          <Label htmlFor="filter-year">Year</Label>
+          <Combobox
+            id="filter-year"
+            placeholder="All years"
+            options={years.map((value) => ({ value, label: value }))}
+            value={year}
+            onChange={setYear}
+            clearable
+          />
+        </div>
+        <div className="grid min-w-[10rem] flex-1 gap-1.5">
+          <Label htmlFor="filter-type">Type</Label>
+          <Combobox
+            id="filter-type"
+            placeholder="All types"
+            options={types.map((value) => ({ value, label: formatPublicationType(value) }))}
+            value={type}
+            onChange={setType}
+            clearable
+          />
+        </div>
+        <div className="grid min-w-[10rem] flex-1 gap-1.5">
+          <Label htmlFor="filter-topic">Topic</Label>
+          <Combobox
+            id="filter-topic"
+            placeholder="All topics"
+            options={topics.map((value) => ({ value, label: value }))}
+            value={topic}
+            onChange={setTopic}
+            clearable
+          />
+        </div>
         {(year || type || topic) && (
           <Button variant="subtle" onClick={clear}>
             Clear filters
           </Button>
         )}
-      </Group>
-      <Text className={classes.count} size="sm" c="dimmed">
+      </div>
+      <p className={`${classes.count} text-sm text-muted-foreground`}>
         Showing {filtered.length} of {publications.length}
-      </Text>
+      </p>
       <div className={classes.list}>
         {filtered.map((publication) => (
           <PublicationCard publication={publication} headingOrder={2} key={publication.id} />
         ))}
-        {!filtered.length && <Text c="dimmed">No publications match these filters.</Text>}
+        {!filtered.length && <p className="text-muted-foreground">No publications match these filters.</p>}
       </div>
     </div>
   )

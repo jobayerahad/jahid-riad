@@ -1,5 +1,6 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Button, Group, Text } from '@mantine/core'
+import { Button } from '@/components/ui/button'
 import { getAdminSession } from '@/actions/admin'
 import Home from '@/components/home'
 import { ensureCmsInitialized, readDraftSnapshot } from '@/lib/cms'
@@ -21,15 +22,15 @@ const AdminPreviewPage = async ({ searchParams }: { searchParams: Promise<{ revi
   return (
     <>
       <div className={classes.banner} role="status">
-        <Group justify="space-between" gap="sm" wrap="nowrap">
+        <div className="flex flex-nowrap items-center justify-between gap-3">
           <div>
-            <Text fw={700}>{label}</Text>
-            <Text size="xs">Only signed-in administrators can see this version.</Text>
+            <p className="font-bold">{label}</p>
+            <p className="text-xs opacity-90">Only signed-in administrators can see this version.</p>
           </div>
-          <Button component="a" href="/admin" color="dark" variant="white" size="sm">
-            Return to admin
+          <Button asChild variant="white" size="sm">
+            <Link href="/admin">Return to admin</Link>
           </Button>
-        </Group>
+        </div>
       </div>
       <div className={classes.preview}>
         <Home content={content} />

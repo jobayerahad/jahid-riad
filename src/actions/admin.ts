@@ -305,8 +305,7 @@ export const saveSectionCopy = async (input: unknown): Promise<AdminActionResult
     (max, section) => (section.updatedAt > max ? section.updatedAt : max),
     new Date(0)
   )
-  const latest =
-    profileDraft && profileDraft.updatedAt > latestSection ? profileDraft.updatedAt : latestSection
+  const latest = profileDraft && profileDraft.updatedAt > latestSection ? profileDraft.updatedAt : latestSection
   if (stale(latest, expectedUpdatedAt)) return conflict()
 
   await prisma.$transaction(async (tx) => {
@@ -887,9 +886,7 @@ export const registerMediaAsset = async (input: unknown): Promise<AdminActionRes
       }
     })()
     const validImage =
-      cloudinaryResourceType === 'image' &&
-      ['jpg', 'jpeg', 'png', 'webp'].includes(format) &&
-      bytes <= 5 * 1024 * 1024
+      cloudinaryResourceType === 'image' && ['jpg', 'jpeg', 'png', 'webp'].includes(format) && bytes <= 5 * 1024 * 1024
     const validPdf =
       cloudinaryResourceType === 'raw' &&
       (format === 'pdf' || secureUrl.toLowerCase().endsWith('.pdf')) &&

@@ -3,9 +3,11 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Badge, Button, Card, Group, Stack, Text, Title } from '@mantine/core'
 import { HiOutlineArrowTopRightOnSquare, HiOutlineArrowUturnLeft } from 'react-icons/hi2'
 import { rollbackRevision } from '@/actions/admin'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import type { AdminData } from '@/lib/admin-data'
 import type { AnyAdminActionResult } from '@/types/admin'
 import { ResultAlert } from './form-support'
@@ -26,53 +28,49 @@ export const RevisionsPanel = ({ data }: { data: AdminData }) => {
   ].join(' · ')
 
   return (
-    <Stack className={classes.formCard} gap="lg">
+    <div className={`${classes.formCard} flex flex-col gap-6`}>
       <div>
-        <Title order={2}>Revision history</Title>
-        <Text c="dimmed">Every publish is immutable. Rollback creates a new version and restores its draft.</Text>
+        <h2 className="text-xl font-bold tracking-tight">Revision history</h2>
+        <p className="text-muted-foreground">
+          Every publish is immutable. Rollback creates a new version and restores its draft.
+        </p>
       </div>
-      <Card withBorder radius="md">
-        <Title order={3} size="h4">
-          Draft vs live
-        </Title>
-        <Text mt="sm" size="sm">
-          Working draft: {draftSummary}
-        </Text>
-        <Text size="sm" c="dimmed">
-          Live revision: {live ? `v${live.version}` : 'none'}
-          {data.state.hasUnpublishedChanges ? ' · unpublished changes pending' : ' · in sync'}
-        </Text>
-        <Text size="sm" mt="xs" c="dimmed">
-          Open Preview to compare the full draft visually against a historical revision.
-        </Text>
+      <Card className="gap-0 rounded-md py-4 shadow-none">
+        <CardContent className="px-4">
+          <h3 className="text-base font-semibold">Draft vs live</h3>
+          <p className="mt-3 text-sm">Working draft: {draftSummary}</p>
+          <p className="text-sm text-muted-foreground">
+            Live revision: {live ? `v${live.version}` : 'none'}
+            {data.state.hasUnpublishedChanges ? ' · unpublished changes pending' : ' · in sync'}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Open Preview to compare the full draft visually against a historical revision.
+          </p>
+        </CardContent>
       </Card>
       <ResultAlert result={result} />
       {data.revisions.map((revision) => (
-        <Card key={revision.id} withBorder radius="md">
-          <Group justify="space-between" align="center">
+        <Card key={revision.id} className="gap-0 rounded-md py-4 shadow-none">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 px-4">
             <div>
-              <Group gap="xs">
-                <Text fw={700}>Version {revision.version}</Text>
-                {revision.active && <Badge color="teal">Live</Badge>}
-              </Group>
-              <Text size="sm" c="dimmed">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-bold">Version {revision.version}</p>
+                {revision.active ? <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100">Live</Badge> : null}
+              </div>
+              <p className="text-sm text-muted-foreground">
                 {new Date(revision.publishedAt).toLocaleString()} · {revision.publishedBy}
-              </Text>
-              {revision.note && <Text mt="xs">{revision.note}</Text>}
+              </p>
+              {revision.note ? <p className="mt-1">{revision.note}</p> : null}
             </div>
-            <Group gap="xs">
-              <Button
-                component={Link}
-                href={`/admin/preview?revision=${revision.id}`}
-                target="_blank"
-                variant="subtle"
-                leftSection={<HiOutlineArrowTopRightOnSquare />}
-              >
-                Preview
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="subtle">
+                <Link href={`/admin/preview?revision=${revision.id}`} target="_blank">
+                  <HiOutlineArrowTopRightOnSquare />
+                  Preview
+                </Link>
               </Button>
               <Button
                 variant="light"
-                leftSection={<HiOutlineArrowUturnLeft />}
                 disabled={revision.active || pending}
                 onClick={() => {
                   if (!window.confirm(`Publish a rollback to version ${revision.version}?`)) return
@@ -83,12 +81,13 @@ export const RevisionsPanel = ({ data }: { data: AdminData }) => {
                   })
                 }}
               >
+                <HiOutlineArrowUturnLeft />
                 Roll back
               </Button>
-            </Group>
-          </Group>
+            </div>
+          </CardContent>
         </Card>
       ))}
-    </Stack>
+    </div>
   )
 }

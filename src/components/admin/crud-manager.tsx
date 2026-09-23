@@ -3,24 +3,6 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ActionIcon,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Modal,
-  NumberInput,
-  Select,
-  SimpleGrid,
-  Stack,
-  Switch,
-  TagsInput,
-  Text,
-  Textarea,
-  TextInput,
-  Title
-} from '@mantine/core'
-import {
   HiOutlineArrowDown,
   HiOutlineArrowUp,
   HiOutlineDocumentDuplicate,
@@ -39,9 +21,18 @@ import {
   savePublication,
   saveWorkStory
 } from '@/actions/admin'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Combobox } from '@/components/ui/combobox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import type { AdminData } from '@/lib/admin-data'
 import type { AnyAdminActionResult, CmsItemKind } from '@/types/admin'
-import { RepeaterField, ResultAlert, useUnsavedWarning } from './form-support'
+import { Field, RepeaterField, ResultAlert, TagsInput, useUnsavedWarning } from './form-support'
 import classes from './styles.module.css'
 
 type Editable = Record<string, unknown>
@@ -170,6 +161,21 @@ const mediaSelectData = (data: AdminData, kind: 'IMAGE' | 'PDF') =>
       label: asset.originalFilename || asset.publicId || asset.secureUrl
     }))
 
+const SwitchRow = ({
+  label,
+  checked,
+  onCheckedChange
+}: {
+  label: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}) => (
+  <label className="flex items-center gap-3 text-sm font-medium">
+    <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    {label}
+  </label>
+)
+
 const ItemFields = ({
   kind,
   value,
@@ -183,430 +189,400 @@ const ItemFields = ({
 }) => {
   if (kind === 'experience') {
     return (
-      <Stack>
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput
-            label="Role"
-            required
-            value={stringValue(value.role)}
-            onChange={(event) => set('role', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Organization"
-            required
-            value={stringValue(value.organization)}
-            onChange={(event) => set('organization', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Organization URL"
-            value={stringValue(value.organizationUrl)}
-            onChange={(event) => set('organizationUrl', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Location"
-            required
-            value={stringValue(value.location)}
-            onChange={(event) => set('location', event.currentTarget.value)}
-          />
-          <Switch
+      <div className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Role">
+            <Input required value={stringValue(value.role)} onChange={(e) => set('role', e.target.value)} />
+          </Field>
+          <Field label="Organization">
+            <Input
+              required
+              value={stringValue(value.organization)}
+              onChange={(e) => set('organization', e.target.value)}
+            />
+          </Field>
+          <Field label="Organization URL">
+            <Input
+              value={stringValue(value.organizationUrl)}
+              onChange={(e) => set('organizationUrl', e.target.value)}
+            />
+          </Field>
+          <Field label="Location">
+            <Input required value={stringValue(value.location)} onChange={(e) => set('location', e.target.value)} />
+          </Field>
+          <SwitchRow
             label="Current role"
             checked={boolValue(value.current)}
-            onChange={(event) => {
-              const checked = event.currentTarget.checked
+            onCheckedChange={(checked) => {
               set('current', checked)
               if (checked) set('endDate', '')
             }}
           />
-          <TextInput
-            type="date"
-            label="Start date"
+          <Field label="Start date">
+            <Input
+              type="date"
+              required
+              value={stringValue(value.startDate)}
+              onChange={(e) => set('startDate', e.target.value)}
+            />
+          </Field>
+          <Field label="End date">
+            <Input
+              type="date"
+              disabled={boolValue(value.current)}
+              value={stringValue(value.endDate)}
+              onChange={(e) => set('endDate', e.target.value)}
+            />
+          </Field>
+        </div>
+        <Field label="Role summary" description={`${stringValue(value.summary).length}/1200 characters`}>
+          <Textarea
             required
-            value={stringValue(value.startDate)}
-            onChange={(event) => set('startDate', event.currentTarget.value)}
+            className="min-h-24"
+            value={stringValue(value.summary)}
+            onChange={(e) => set('summary', e.target.value)}
           />
-          <TextInput
-            type="date"
-            label="End date"
-            disabled={boolValue(value.current)}
-            value={stringValue(value.endDate)}
-            onChange={(event) => set('endDate', event.currentTarget.value)}
-          />
-        </SimpleGrid>
-        <Textarea
-          label="Role summary"
-          description={`${stringValue(value.summary).length}/1200 characters`}
-          required
-          minRows={4}
-          value={stringValue(value.summary)}
-          onChange={(event) => set('summary', event.currentTarget.value)}
-        />
+        </Field>
         <RepeaterField
           label="Highlight"
           values={arrayValue(value.highlights)}
           onChange={(items) => set('highlights', items)}
           placeholder="Describe a responsibility or outcome"
         />
-        <Switch
+        <SwitchRow
           label="Visible when published"
           checked={boolValue(value.enabled)}
-          onChange={(event) => set('enabled', event.currentTarget.checked)}
+          onCheckedChange={(checked) => set('enabled', checked)}
         />
-      </Stack>
+      </div>
     )
   }
 
   if (kind === 'publication') {
     const authors = authorsValue(value.authors)
     return (
-      <Stack>
-        <Textarea
-          label="Paper title"
-          required
-          minRows={2}
-          value={stringValue(value.title)}
-          onChange={(event) => set('title', event.currentTarget.value)}
-        />
-        <TextInput
-          label="Slug"
-          description="Lowercase kebab-case URL segment"
-          required
-          value={stringValue(value.slug)}
-          onChange={(event) => set('slug', event.currentTarget.value)}
-        />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <NumberInput
-            label="Year"
+      <div className="flex flex-col gap-4">
+        <Field label="Paper title">
+          <Textarea
             required
-            min={1900}
-            max={2200}
-            value={numberValue(value.year)}
-            onChange={(next) => set('year', Number(next))}
+            className="min-h-16"
+            value={stringValue(value.title)}
+            onChange={(e) => set('title', e.target.value)}
           />
-          <NumberInput
-            label="Month"
-            min={1}
-            max={12}
-            value={nullableNumber(value.month) ?? undefined}
-            onChange={(next) => set('month', next === '' || next == null ? null : Number(next))}
+        </Field>
+        <Field label="Slug" description="Lowercase kebab-case URL segment">
+          <Input required value={stringValue(value.slug)} onChange={(e) => set('slug', e.target.value)} />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Year">
+            <Input
+              type="number"
+              required
+              min={1900}
+              max={2200}
+              value={numberValue(value.year)}
+              onChange={(e) => set('year', Number(e.target.value))}
+            />
+          </Field>
+          <Field label="Month">
+            <Input
+              type="number"
+              min={1}
+              max={12}
+              value={nullableNumber(value.month) ?? ''}
+              onChange={(e) => set('month', e.target.value === '' ? null : Number(e.target.value))}
+            />
+          </Field>
+          <Field label="Publication type">
+            <Select value={stringValue(value.type) || 'JOURNAL_ARTICLE'} onValueChange={(next) => set('type', next)}>
+              <SelectTrigger className="h-[42px] w-full rounded-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {publicationTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Status">
+            <Select value={stringValue(value.status) || 'PUBLISHED'} onValueChange={(next) => set('status', next)}>
+              <SelectTrigger className="h-[42px] w-full rounded-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {publicationStatusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Venue">
+            <Input value={stringValue(value.venue)} onChange={(e) => set('venue', e.target.value)} />
+          </Field>
+          <Field label="Pages">
+            <Input value={stringValue(value.pages)} onChange={(e) => set('pages', e.target.value)} />
+          </Field>
+          <Field label="DOI">
+            <Input value={stringValue(value.doi)} onChange={(e) => set('doi', e.target.value)} />
+          </Field>
+          <Field label="Paper URL">
+            <Input value={stringValue(value.paperUrl)} onChange={(e) => set('paperUrl', e.target.value)} />
+          </Field>
+          <Field label="Google Scholar URL">
+            <Input value={stringValue(value.scholarUrl)} onChange={(e) => set('scholarUrl', e.target.value)} />
+          </Field>
+        </div>
+        <Field label="Abstract or short summary" description={`${stringValue(value.abstract).length}/2000 characters`}>
+          <Textarea
+            className="min-h-24"
+            value={stringValue(value.abstract)}
+            onChange={(e) => set('abstract', e.target.value)}
           />
-          <Select
-            label="Publication type"
-            required
-            data={publicationTypeOptions}
-            value={stringValue(value.type) || null}
-            onChange={(next) => set('type', next ?? 'JOURNAL_ARTICLE')}
+        </Field>
+        <Field label="BibTeX" description="Optional citation entry">
+          <Textarea
+            className="min-h-24 font-mono text-sm"
+            value={stringValue(value.bibtex)}
+            onChange={(e) => set('bibtex', e.target.value)}
           />
-          <Select
-            label="Status"
-            required
-            data={publicationStatusOptions}
-            value={stringValue(value.status) || null}
-            onChange={(next) => set('status', next ?? 'PUBLISHED')}
-          />
-          <TextInput
-            label="Venue"
-            value={stringValue(value.venue)}
-            onChange={(event) => set('venue', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Pages"
-            value={stringValue(value.pages)}
-            onChange={(event) => set('pages', event.currentTarget.value)}
-          />
-          <TextInput
-            label="DOI"
-            value={stringValue(value.doi)}
-            onChange={(event) => set('doi', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Paper URL"
-            value={stringValue(value.paperUrl)}
-            onChange={(event) => set('paperUrl', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Google Scholar URL"
-            value={stringValue(value.scholarUrl)}
-            onChange={(event) => set('scholarUrl', event.currentTarget.value)}
-          />
-        </SimpleGrid>
-        <Textarea
-          label="Abstract or short summary"
-          description={`${stringValue(value.abstract).length}/2000 characters`}
-          minRows={4}
-          value={stringValue(value.abstract)}
-          onChange={(event) => set('abstract', event.currentTarget.value)}
-        />
-        <Textarea
-          label="BibTeX"
-          description="Optional citation entry"
-          minRows={4}
-          value={stringValue(value.bibtex)}
-          onChange={(event) => set('bibtex', event.currentTarget.value)}
-        />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <Select
-            label="Cover image"
-            description="Optional image from the media library"
-            searchable
-            clearable
-            data={mediaSelectData(data, 'IMAGE')}
-            value={stringValue(value.coverImageId) || null}
-            onChange={(next) => set('coverImageId', next)}
-          />
-          <Select
-            label="PDF asset"
-            description="Optional PDF from the media library"
-            searchable
-            clearable
-            data={mediaSelectData(data, 'PDF')}
-            value={stringValue(value.pdfAssetId) || null}
-            onChange={(next) => set('pdfAssetId', next)}
-          />
-        </SimpleGrid>
-        <Stack gap="xs">
-          <Text fw={600} size="sm">
-            Authors
-          </Text>
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Cover image" description="Optional image from the media library">
+            <Combobox
+              clearable
+              options={mediaSelectData(data, 'IMAGE')}
+              value={stringValue(value.coverImageId) || null}
+              onChange={(next) => set('coverImageId', next)}
+              placeholder="Select cover image"
+            />
+          </Field>
+          <Field label="PDF asset" description="Optional PDF from the media library">
+            <Combobox
+              clearable
+              options={mediaSelectData(data, 'PDF')}
+              value={stringValue(value.pdfAssetId) || null}
+              onChange={(next) => set('pdfAssetId', next)}
+              placeholder="Select PDF"
+            />
+          </Field>
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-semibold">Authors</p>
           {authors.map((author, index) => (
-            <SimpleGrid key={`author-${index}`} cols={{ base: 1, sm: 3 }} className={classes.repeaterCard}>
-              <TextInput
-                label="Name"
-                required
-                value={author.name}
-                onChange={(event) =>
-                  set(
-                    'authors',
-                    authors.map((row, rowIndex) =>
-                      rowIndex === index ? { ...row, name: event.currentTarget.value } : row
+            <div key={`author-${index}`} className={`grid gap-4 sm:grid-cols-3 ${classes.repeaterCard}`}>
+              <Field label="Name">
+                <Input
+                  required
+                  value={author.name}
+                  onChange={(e) =>
+                    set(
+                      'authors',
+                      authors.map((row, rowIndex) => (rowIndex === index ? { ...row, name: e.target.value } : row))
                     )
-                  )
-                }
-              />
-              <Switch
+                  }
+                />
+              </Field>
+              <SwitchRow
                 label="This is me"
                 checked={author.isSelf}
-                onChange={(event) =>
+                onCheckedChange={(checked) =>
                   set(
                     'authors',
-                    authors.map((row, rowIndex) =>
-                      rowIndex === index ? { ...row, isSelf: event.currentTarget.checked } : row
-                    )
+                    authors.map((row, rowIndex) => (rowIndex === index ? { ...row, isSelf: checked } : row))
                   )
                 }
               />
-              <Group align="end">
+              <div className="flex items-end">
                 <Button
                   type="button"
-                  variant="subtle"
-                  color="red"
-                  leftSection={<HiOutlineTrash />}
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
                   disabled={authors.length <= 1}
-                  onClick={() => set('authors', authors.filter((_, rowIndex) => rowIndex !== index))}
+                  onClick={() =>
+                    set(
+                      'authors',
+                      authors.filter((_, rowIndex) => rowIndex !== index)
+                    )
+                  }
                 >
+                  <HiOutlineTrash />
                   Remove
                 </Button>
-              </Group>
-            </SimpleGrid>
+              </div>
+            </div>
           ))}
           <Button
             type="button"
             variant="light"
-            leftSection={<HiOutlinePlus />}
             onClick={() => set('authors', [...authors, { name: '', isSelf: false }])}
           >
+            <HiOutlinePlus />
             Add author
           </Button>
-        </Stack>
-        <TagsInput
-          label="Topics"
-          value={arrayValue(value.topics)}
-          onChange={(items) => set('topics', items)}
-          splitChars={[',']}
-        />
-        <Group>
-          <Switch
+        </div>
+        <TagsInput label="Topics" value={arrayValue(value.topics)} onChange={(items) => set('topics', items)} />
+        <div className="flex flex-wrap gap-6">
+          <SwitchRow
             label="Featured on homepage"
             checked={boolValue(value.featured)}
-            onChange={(event) => set('featured', event.currentTarget.checked)}
+            onCheckedChange={(checked) => set('featured', checked)}
           />
-          <Switch
+          <SwitchRow
             label="Visible when published"
             checked={boolValue(value.enabled)}
-            onChange={(event) => set('enabled', event.currentTarget.checked)}
+            onCheckedChange={(checked) => set('enabled', checked)}
           />
-        </Group>
-      </Stack>
+        </div>
+      </div>
     )
   }
 
   if (kind === 'capability') {
     return (
-      <Stack>
-        <TextInput
-          label="Group title"
-          required
-          value={stringValue(value.title)}
-          onChange={(event) => set('title', event.currentTarget.value)}
-        />
-        <Textarea
-          label="Description"
-          required
-          minRows={3}
-          value={stringValue(value.description)}
-          onChange={(event) => set('description', event.currentTarget.value)}
-        />
-        <TagsInput
-          label="Skills and tools"
-          value={arrayValue(value.items)}
-          onChange={(items) => set('items', items)}
-          splitChars={[',']}
-        />
-        <Switch
+      <div className="flex flex-col gap-4">
+        <Field label="Group title">
+          <Input required value={stringValue(value.title)} onChange={(e) => set('title', e.target.value)} />
+        </Field>
+        <Field label="Description">
+          <Textarea
+            required
+            className="min-h-20"
+            value={stringValue(value.description)}
+            onChange={(e) => set('description', e.target.value)}
+          />
+        </Field>
+        <TagsInput label="Skills and tools" value={arrayValue(value.items)} onChange={(items) => set('items', items)} />
+        <SwitchRow
           label="Visible when published"
           checked={boolValue(value.enabled)}
-          onChange={(event) => set('enabled', event.currentTarget.checked)}
+          onCheckedChange={(checked) => set('enabled', checked)}
         />
-      </Stack>
+      </div>
     )
   }
 
   if (kind === 'learning') {
     return (
-      <Stack>
-        <TextInput
-          label="Title"
-          required
-          value={stringValue(value.title)}
-          onChange={(event) => set('title', event.currentTarget.value)}
-        />
-        <TextInput
-          label="Issuer"
-          required
-          value={stringValue(value.issuer)}
-          onChange={(event) => set('issuer', event.currentTarget.value)}
-        />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <NumberInput
-            label="Year"
-            min={1900}
-            max={2200}
-            value={nullableNumber(value.year) ?? undefined}
-            onChange={(next) => set('year', next === '' || next == null ? null : Number(next))}
-          />
-          <TextInput
-            label="Credential URL"
-            value={stringValue(value.credentialUrl)}
-            onChange={(event) => set('credentialUrl', event.currentTarget.value)}
-          />
-        </SimpleGrid>
-        <Switch
+      <div className="flex flex-col gap-4">
+        <Field label="Title">
+          <Input required value={stringValue(value.title)} onChange={(e) => set('title', e.target.value)} />
+        </Field>
+        <Field label="Issuer">
+          <Input required value={stringValue(value.issuer)} onChange={(e) => set('issuer', e.target.value)} />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Year">
+            <Input
+              type="number"
+              min={1900}
+              max={2200}
+              value={nullableNumber(value.year) ?? ''}
+              onChange={(e) => set('year', e.target.value === '' ? null : Number(e.target.value))}
+            />
+          </Field>
+          <Field label="Credential URL">
+            <Input value={stringValue(value.credentialUrl)} onChange={(e) => set('credentialUrl', e.target.value)} />
+          </Field>
+        </div>
+        <SwitchRow
           label="Visible when published"
           checked={boolValue(value.enabled)}
-          onChange={(event) => set('enabled', event.currentTarget.checked)}
+          onCheckedChange={(checked) => set('enabled', checked)}
         />
-      </Stack>
+      </div>
     )
   }
 
   if (kind === 'work') {
     return (
-      <Stack>
-        <TextInput
-          label="Title"
-          required
-          value={stringValue(value.title)}
-          onChange={(event) => set('title', event.currentTarget.value)}
-        />
-        <Textarea
-          label="Body"
-          required
-          minRows={4}
-          value={stringValue(value.body)}
-          onChange={(event) => set('body', event.currentTarget.value)}
-        />
-        <TextInput
-          label="Evidence"
-          required
-          value={stringValue(value.evidence)}
-          onChange={(event) => set('evidence', event.currentTarget.value)}
-        />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput
-            label="Link"
+      <div className="flex flex-col gap-4">
+        <Field label="Title">
+          <Input required value={stringValue(value.title)} onChange={(e) => set('title', e.target.value)} />
+        </Field>
+        <Field label="Body">
+          <Textarea
             required
-            value={stringValue(value.href)}
-            onChange={(event) => set('href', event.currentTarget.value)}
+            className="min-h-24"
+            value={stringValue(value.body)}
+            onChange={(e) => set('body', e.target.value)}
           />
-          <TextInput
-            label="Link label"
-            required
-            value={stringValue(value.linkLabel)}
-            onChange={(event) => set('linkLabel', event.currentTarget.value)}
-          />
-          <TextInput
-            label="Visual label"
-            required
-            value={stringValue(value.visualLabel)}
-            onChange={(event) => set('visualLabel', event.currentTarget.value)}
-          />
-        </SimpleGrid>
-        <Switch
+        </Field>
+        <Field label="Evidence">
+          <Input required value={stringValue(value.evidence)} onChange={(e) => set('evidence', e.target.value)} />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Link">
+            <Input required value={stringValue(value.href)} onChange={(e) => set('href', e.target.value)} />
+          </Field>
+          <Field label="Link label">
+            <Input required value={stringValue(value.linkLabel)} onChange={(e) => set('linkLabel', e.target.value)} />
+          </Field>
+          <Field label="Visual label">
+            <Input
+              required
+              value={stringValue(value.visualLabel)}
+              onChange={(e) => set('visualLabel', e.target.value)}
+            />
+          </Field>
+        </div>
+        <SwitchRow
           label="Visible when published"
           checked={boolValue(value.enabled)}
-          onChange={(event) => set('enabled', event.currentTarget.checked)}
+          onCheckedChange={(checked) => set('enabled', checked)}
         />
-      </Stack>
+      </div>
     )
   }
 
   return (
-    <Stack>
-      <TextInput
-        label="Degree or credential"
-        required
-        value={stringValue(value.degree)}
-        onChange={(event) => set('degree', event.currentTarget.value)}
-      />
-      <TextInput
-        label="Institution"
-        required
-        value={stringValue(value.institution)}
-        onChange={(event) => set('institution', event.currentTarget.value)}
-      />
-      <TextInput
-        label="Location"
-        required
-        value={stringValue(value.location)}
-        onChange={(event) => set('location', event.currentTarget.value)}
-      />
-      <SimpleGrid cols={{ base: 1, sm: 2 }}>
-        <NumberInput
-          label="Start year"
-          min={1900}
-          max={2200}
-          value={numberValue(value.startYear)}
-          onChange={(next) => set('startYear', Number(next))}
+    <div className="flex flex-col gap-4">
+      <Field label="Degree or credential">
+        <Input required value={stringValue(value.degree)} onChange={(e) => set('degree', e.target.value)} />
+      </Field>
+      <Field label="Institution">
+        <Input required value={stringValue(value.institution)} onChange={(e) => set('institution', e.target.value)} />
+      </Field>
+      <Field label="Location">
+        <Input required value={stringValue(value.location)} onChange={(e) => set('location', e.target.value)} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Start year">
+          <Input
+            type="number"
+            min={1900}
+            max={2200}
+            value={numberValue(value.startYear)}
+            onChange={(e) => set('startYear', Number(e.target.value))}
+          />
+        </Field>
+        <Field label="End year">
+          <Input
+            type="number"
+            min={1900}
+            max={2200}
+            value={nullableNumber(value.endYear) ?? ''}
+            onChange={(e) => set('endYear', e.target.value === '' ? null : Number(e.target.value))}
+          />
+        </Field>
+      </div>
+      <Field label="Details">
+        <Textarea
+          className="min-h-24"
+          value={stringValue(value.detail)}
+          onChange={(e) => set('detail', e.target.value)}
         />
-        <NumberInput
-          label="End year"
-          min={1900}
-          max={2200}
-          value={nullableNumber(value.endYear) ?? undefined}
-          onChange={(next) => set('endYear', next === '' || next == null ? null : Number(next))}
-        />
-      </SimpleGrid>
-      <Textarea
-        label="Details"
-        minRows={4}
-        value={stringValue(value.detail)}
-        onChange={(event) => set('detail', event.currentTarget.value)}
-      />
-      <Switch
+      </Field>
+      <SwitchRow
         label="Visible when published"
         checked={boolValue(value.enabled)}
-        onChange={(event) => set('enabled', event.currentTarget.checked)}
+        onCheckedChange={(checked) => set('enabled', checked)}
       />
-    </Stack>
+    </div>
   )
 }
 
@@ -667,71 +643,72 @@ export const CrudManager = ({ kind, data }: { kind: CmsItemKind; data: AdminData
   }
 
   return (
-    <Stack className={classes.formCard} gap="lg">
-      <Group justify="space-between" align="flex-start">
+    <div className={`${classes.formCard} flex flex-col gap-6`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Title order={2}>{titles[kind]}</Title>
-          <Text c="dimmed">Add, edit, duplicate, hide, remove, and control display order.</Text>
+          <h2 className="text-xl font-bold tracking-tight">{titles[kind]}</h2>
+          <p className="text-muted-foreground">Add, edit, duplicate, hide, remove, and control display order.</p>
         </div>
-        <Button leftSection={<HiOutlinePlus />} onClick={openNew}>
+        <Button onClick={openNew}>
+          <HiOutlinePlus />
           Add {titles[kind].toLowerCase()}
         </Button>
-      </Group>
+      </div>
       <ResultAlert result={result} />
-      {kind === 'publication' && (
-        <TextInput
-          placeholder="Search publications"
-          value={search}
-          onChange={(event) => setSearch(event.currentTarget.value)}
-        />
-      )}
-      <Stack gap="sm">
+      {kind === 'publication' ? (
+        <Input placeholder="Search publications" value={search} onChange={(event) => setSearch(event.target.value)} />
+      ) : null}
+      <div className="flex flex-col gap-3">
         {filtered.map((item) => {
           const globalIndex = items.findIndex((candidate) => candidate.id === item.id)
           return (
-            <Card withBorder radius="md" padding="md" key={stringValue(item.id)}>
-              <Group justify="space-between" align="center" wrap="nowrap">
+            <Card key={stringValue(item.id)} className="gap-0 rounded-md py-4 shadow-none">
+              <CardContent className="flex items-center justify-between gap-3 px-4">
                 <div className={classes.grow}>
-                  <Group gap="xs">
-                    <Text fw={700}>{itemLabel(kind, item)}</Text>
-                    {!boolValue(item.enabled) && <Badge color="gray">Hidden</Badge>}
-                  </Group>
-                  {'year' in item && (
-                    <Text size="sm" c="dimmed">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-bold">{itemLabel(kind, item)}</p>
+                    {!boolValue(item.enabled) ? <Badge variant="secondary">Hidden</Badge> : null}
+                  </div>
+                  {'year' in item ? (
+                    <p className="text-sm text-muted-foreground">
                       {stringValue(item.period) || (typeof item.year === 'number' ? item.year : '')}
-                    </Text>
-                  )}
+                    </p>
+                  ) : null}
                 </div>
-                <Group gap={4} wrap="nowrap">
-                  <ActionIcon
-                    variant="subtle"
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     aria-label="Move up"
                     disabled={globalIndex <= 0 || pending || Boolean(search.trim())}
                     onClick={() => run(() => moveCmsItem(kind, stringValue(item.id), 'up'))}
                   >
                     <HiOutlineArrowUp />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     aria-label="Move down"
                     disabled={globalIndex < 0 || globalIndex >= items.length - 1 || pending || Boolean(search.trim())}
                     onClick={() => run(() => moveCmsItem(kind, stringValue(item.id), 'down'))}
                   >
                     <HiOutlineArrowDown />
-                  </ActionIcon>
-                  <ActionIcon variant="subtle" aria-label="Edit" onClick={() => openEdit(item)}>
+                  </Button>
+                  <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => openEdit(item)}>
                     <HiOutlinePencilSquare />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     aria-label="Duplicate"
                     onClick={() => run(() => duplicateCmsItem(kind, stringValue(item.id)))}
                   >
                     <HiOutlineDocumentDuplicate />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
                     aria-label="Delete"
                     onClick={() => {
                       if (window.confirm('Remove this item from the draft?'))
@@ -739,40 +716,39 @@ export const CrudManager = ({ kind, data }: { kind: CmsItemKind; data: AdminData
                     }}
                   >
                     <HiOutlineTrash />
-                  </ActionIcon>
-                </Group>
-              </Group>
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           )
         })}
-        {!filtered.length && <Text c="dimmed">No items found.</Text>}
-      </Stack>
+        {!filtered.length ? <p className="text-muted-foreground">No items found.</p> : null}
+      </div>
 
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title={`${stringValue(value.id) ? 'Edit' : 'Add'} ${titles[kind].toLowerCase()}`}
-        size="lg"
-        fullScreen={false}
-      >
-        <Stack>
-          <ResultAlert result={result} />
-          <ItemFields
-            kind={kind}
-            value={value}
-            data={data}
-            set={(key, next) => setValue((current) => ({ ...current, [key]: next }))}
-          />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setOpened(false)}>
+      <Dialog open={opened} onOpenChange={setOpened}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{`${stringValue(value.id) ? 'Edit' : 'Add'} ${titles[kind].toLowerCase()}`}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <ResultAlert result={result} />
+            <ItemFields
+              kind={kind}
+              value={value}
+              data={data}
+              set={(key, next) => setValue((current) => ({ ...current, [key]: next }))}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpened(false)}>
               Cancel
             </Button>
             <Button loading={pending} onClick={save}>
               Save draft
             </Button>
-          </Group>
-        </Stack>
-      </Modal>
-    </Stack>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

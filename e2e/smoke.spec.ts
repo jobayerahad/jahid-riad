@@ -13,7 +13,7 @@ test('publications index and detail navigation', async ({ page }) => {
   if (await firstDetail.count()) {
     await firstDetail.click()
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-    await expect(page.getByText(/BibTeX/i)).toBeVisible()
+    await expect(page.getByRole('button', { name: /Copy BibTeX/i })).toBeVisible()
   }
 })
 

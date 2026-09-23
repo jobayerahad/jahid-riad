@@ -1,5 +1,5 @@
-import { Container, Text, Title } from '@mantine/core'
 import { getPortfolioContent } from '@/data/portfolio'
+import { Container } from '@/components/ui/container'
 import SectionHeader from '@/components/ui/section-header'
 import Reveal from '@/components/ui/reveal'
 import classes from './styles.module.css'
@@ -22,8 +22,8 @@ const Skills = async ({ content }: { content?: PublishedPortfolioSnapshot }) => 
         <div className={classes.grid}>
           {capabilityGroups.map((group) => (
             <Reveal as="article" className={classes.group} key={group.id}>
-              <Title order={3}>{group.title}</Title>
-              <Text className={classes.description}>{group.description}</Text>
+              <h3>{group.title}</h3>
+              <p className={classes.description}>{group.description}</p>
               <ul className={classes.items} aria-label={`${group.title} skills`}>
                 {group.items.map((item) => (
                   <li key={item}>{item}</li>

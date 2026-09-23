@@ -161,7 +161,12 @@ export const publicationAuthorSchema = z.object({
 
 export const publicationSchema = z.object({
   id: z.string().optional(),
-  slug: z.string().trim().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use a lowercase kebab-case slug'),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(200)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use a lowercase kebab-case slug'),
   title: z.string().trim().min(1, 'Title is required').max(500),
   year: z.number().int().min(1900).max(2200),
   month: z.number().int().min(1).max(12).nullable().optional(),
@@ -340,7 +345,12 @@ const authorFromLegacy = (author: string | { name: string; isSelf?: boolean }) =
 
 /** Upgrades a v1 snapshot (or unknown legacy JSON) to the current v2 shape. */
 export const upgradeSnapshot = (raw: unknown): PublishedPortfolioSnapshot => {
-  if (raw && typeof raw === 'object' && 'schemaVersion' in raw && (raw as { schemaVersion: number }).schemaVersion === 2) {
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    'schemaVersion' in raw &&
+    (raw as { schemaVersion: number }).schemaVersion === 2
+  ) {
     return publishedPortfolioSnapshotSchema.parse(raw)
   }
 
@@ -351,14 +361,16 @@ export const upgradeSnapshot = (raw: unknown): PublishedPortfolioSnapshot => {
     profile?: ProfileInput
     experiences?: Array<ExperienceInput & { current?: boolean }>
     education?: EducationInput[]
-    publications?: Array<Omit<PublicationInput, 'authors' | 'type' | 'slug'> & {
-      id?: string
-      type?: string
-      authors?: Array<string | { name: string; isSelf?: boolean }>
-      mediaAssetId?: string | null
-      media?: z.infer<typeof mediaReferenceSchema>
-      scholarUrl?: string
-    }>
+    publications?: Array<
+      Omit<PublicationInput, 'authors' | 'type' | 'slug'> & {
+        id?: string
+        type?: string
+        authors?: Array<string | { name: string; isSelf?: boolean }>
+        mediaAssetId?: string | null
+        media?: z.infer<typeof mediaReferenceSchema>
+        scholarUrl?: string
+      }
+    >
     capabilities?: CapabilityInput[]
   }
 
@@ -491,10 +503,7 @@ export const upgradeSnapshot = (raw: unknown): PublishedPortfolioSnapshot => {
 
   const publications = (v1.publications ?? []).map((item, index) => {
     const authors = (item.authors ?? []).map(authorFromLegacy)
-    const slug =
-      (item as { slug?: string }).slug ||
-      item.id ||
-      `publication-${index + 1}`
+    const slug = (item as { slug?: string }).slug || item.id || `publication-${index + 1}`
     return {
       ...item,
       slug,

@@ -2,30 +2,31 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Button,
-  Divider,
-  Group,
-  Select,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Text,
-  Textarea,
-  TextInput,
-  Title
-} from '@mantine/core'
-import { useForm } from '@mantine/form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useFieldArray, useForm, type Resolver } from 'react-hook-form'
 import { HiOutlinePlus, HiOutlineTrash } from 'react-icons/hi2'
+import { z } from 'zod'
 import { saveAbout, saveProfileHero, saveSectionCopy, saveSettings } from '@/actions/admin'
+import { Button } from '@/components/ui/button'
+import { Combobox } from '@/components/ui/combobox'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import type { AdminData } from '@/lib/admin-data'
+import { aboutFormSchema, profileHeroFormSchema, sectionCopyFormSchema, settingsFormSchema } from '@/schemas/admin'
 import type { AnyAdminActionResult } from '@/types/admin'
-import { FormFooter, ResultAlert, useUnsavedWarning } from './form-support'
+import { applyServerErrors, FormFooter, ResultAlert, useUnsavedWarning } from './form-support'
 import classes from './styles.module.css'
 
 type CommonProps = { data: AdminData }
 
-const errorsFrom = (result: AnyAdminActionResult) => (!result.ok && result.fieldErrors ? result.fieldErrors : {})
+type ProfileHeroValues = z.infer<typeof profileHeroFormSchema>
+type AboutValues = z.infer<typeof aboutFormSchema>
+type SectionCopyValues = z.infer<typeof sectionCopyFormSchema>
+type SettingsValues = z.infer<typeof settingsFormSchema>
 
 const mediaOptions = (data: AdminData, kind: 'IMAGE' | 'PDF' = 'IMAGE') =>
   data.media
@@ -43,14 +44,28 @@ const platformOptions = [
   { value: 'website', label: 'Website' }
 ]
 
+const SectionHeading = ({ title, description }: { title: string; description: string }) => (
+  <div>
+    <h2 className="text-xl font-bold tracking-tight">{title}</h2>
+    <p className="text-muted-foreground">{description}</p>
+  </div>
+)
+
+const DividerLabel = ({ label }: { label: string }) => (
+  <div className="flex items-center gap-3">
+    <p className="shrink-0 text-sm font-semibold text-muted-foreground">{label}</p>
+    <Separator className="flex-1" />
+  </div>
+)
+
 export const ProfileHeroForm = ({ data }: CommonProps) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
   const { profile, hero, copy, settings } = data.draft
-  const form = useForm({
-    mode: 'controlled',
-    initialValues: {
+  const form = useForm<ProfileHeroValues>({
+    resolver: zodResolver(profileHeroFormSchema) as Resolver<ProfileHeroValues>,
+    defaultValues: {
       ...profile,
       heading: hero?.heading ?? copy.heroHeading,
       accent: hero?.accent ?? copy.heroAccent,
@@ -66,86 +81,327 @@ export const ProfileHeroForm = ({ data }: CommonProps) => {
       expectedSettingsUpdatedAt: data.timestamps.settings
     }
   })
-  useUnsavedWarning(form.isDirty())
-
-  const submit = form.onSubmit((values) =>
-    startTransition(async () => {
-      setResult(null)
-      const response = await saveProfileHero(values)
-      setResult(response)
-      if (!response.ok) form.setErrors(errorsFrom(response))
-      else {
-        form.resetDirty(values)
-        router.refresh()
-      }
-    })
-  )
+  const socialLinks = useFieldArray({ control: form.control, name: 'socialLinks' })
+  useUnsavedWarning(form.formState.isDirty)
 
   return (
-    <form onSubmit={submit} className={classes.formCard}>
-      <Stack gap="lg">
-        <div>
-          <Title order={2}>Profile & Hero</Title>
-          <Text c="dimmed">Identity, positioning, hero copy, links, and portrait.</Text>
-        </div>
-        <ResultAlert result={result} />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Full name" required maxLength={120} {...form.getInputProps('name')} />
-          <TextInput label="Short name" required maxLength={80} {...form.getInputProps('shortName')} />
-          <TextInput label="Current role" required maxLength={120} {...form.getInputProps('role')} />
-          <TextInput label="Location" required maxLength={160} {...form.getInputProps('location')} />
-        </SimpleGrid>
-        <TextInput label="Positioning line" required maxLength={180} {...form.getInputProps('positioning')} />
-        <Textarea label="Professional summary" required minRows={3} maxLength={1200} {...form.getInputProps('summary')} />
-        <Divider label="Hero copy" labelPosition="left" />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Heading" required {...form.getInputProps('heading')} />
-          <TextInput label="Accent text" required {...form.getInputProps('accent')} />
-        </SimpleGrid>
-        <Textarea label="Introduction" required minRows={3} {...form.getInputProps('introduction')} />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Primary button label" required {...form.getInputProps('primaryLabel')} />
-          <TextInput label="Primary button target" required {...form.getInputProps('primaryHref')} />
-          <TextInput label="Secondary button label" required {...form.getInputProps('secondaryLabel')} />
-          <TextInput label="Secondary button target" required {...form.getInputProps('secondaryHref')} />
-          <TextInput label="Focus label" required {...form.getInputProps('focusLabel')} />
-          <Select
-            label="Hero portrait"
-            searchable
-            clearable
-            data={mediaOptions(data)}
-            {...form.getInputProps('heroImageId')}
+    <Form {...form}>
+      <form
+        className={classes.formCard}
+        onSubmit={form.handleSubmit((values) =>
+          startTransition(async () => {
+            setResult(null)
+            const response = await saveProfileHero(values)
+            setResult(response)
+            if (!response.ok) applyServerErrors(form, response.fieldErrors)
+            else {
+              form.reset(values)
+              router.refresh()
+            }
+          })
+        )}
+      >
+        <div className="flex flex-col gap-6">
+          <SectionHeading title="Profile & Hero" description="Identity, positioning, hero copy, links, and portrait." />
+          <ResultAlert result={result} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full name</FormLabel>
+                  <FormControl>
+                    <Input required maxLength={120} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="shortName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Short name</FormLabel>
+                  <FormControl>
+                    <Input required maxLength={80} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current role</FormLabel>
+                  <FormControl>
+                    <Input required maxLength={120} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input required maxLength={160} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="positioning"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Positioning line</FormLabel>
+                <FormControl>
+                  <Input required maxLength={180} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </SimpleGrid>
-        <Divider label="Professional links" labelPosition="left" />
-        {form.values.socialLinks.map((link, index) => (
-          <SimpleGrid key={link.id ?? index} cols={{ base: 1, sm: 4 }} className={classes.repeaterCard}>
-            <Select label="Platform" data={platformOptions} {...form.getInputProps(`socialLinks.${index}.kind`)} />
-            <TextInput label="Label" {...form.getInputProps(`socialLinks.${index}.label`)} />
-            <TextInput label="URL" {...form.getInputProps(`socialLinks.${index}.href`)} />
-            <Group align="flex-end">
-              <Switch label="Visible" {...form.getInputProps(`socialLinks.${index}.enabled`, { type: 'checkbox' })} />
-              <Button
-                variant="subtle"
-                color="red"
-                leftSection={<HiOutlineTrash />}
-                onClick={() => form.removeListItem('socialLinks', index)}
-              >
-                Remove
-              </Button>
-            </Group>
-          </SimpleGrid>
-        ))}
-        <Button
-          variant="light"
-          leftSection={<HiOutlinePlus />}
-          onClick={() => form.insertListItem('socialLinks', { label: '', href: '', kind: 'linkedin', enabled: true })}
-        >
-          Add professional link
-        </Button>
-        <FormFooter pending={pending} dirty={form.isDirty()} />
-      </Stack>
-    </form>
+          <FormField
+            control={form.control}
+            name="summary"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Professional summary</FormLabel>
+                <FormControl>
+                  <Textarea required className="min-h-20" maxLength={1200} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <DividerLabel label="Hero copy" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="heading"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Heading</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Accent text</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="introduction"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Introduction</FormLabel>
+                <FormControl>
+                  <Textarea required className="min-h-20" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="primaryLabel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Primary button label</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="primaryHref"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Primary button target</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="secondaryLabel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Secondary button label</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="secondaryHref"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Secondary button target</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="focusLabel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Focus label</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="heroImageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hero portrait</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      clearable
+                      options={mediaOptions(data)}
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      placeholder="Select portrait"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <DividerLabel label="Professional links" />
+          {socialLinks.fields.map((link, index) => (
+            <div key={link.id} className={`grid gap-4 sm:grid-cols-4 ${classes.repeaterCard}`}>
+              <FormField
+                control={form.control}
+                name={`socialLinks.${index}.kind`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="h-[42px] w-full rounded-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {platformOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`socialLinks.${index}.label`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Label</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`socialLinks.${index}.href`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex flex-wrap items-end gap-3">
+                <FormField
+                  control={form.control}
+                  name={`socialLinks.${index}.enabled`}
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-2">
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <FormLabel className="font-normal">Visible</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => socialLinks.remove(index)}
+                >
+                  <HiOutlineTrash />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="light"
+            onClick={() => socialLinks.append({ label: '', href: '', kind: 'linkedin', enabled: true })}
+          >
+            <HiOutlinePlus />
+            Add professional link
+          </Button>
+          <FormFooter pending={pending} dirty={form.formState.isDirty} />
+        </div>
+      </form>
+    </Form>
   )
 }
 
@@ -161,9 +417,9 @@ export const AboutForm = ({ data }: CommonProps) => {
         text: item.text,
         enabled: item.enabled
       }))
-  const form = useForm({
-    mode: 'controlled',
-    initialValues: {
+  const form = useForm<AboutValues>({
+    resolver: zodResolver(aboutFormSchema) as Resolver<AboutValues>,
+    defaultValues: {
       aboutEyebrow: data.draft.copy.aboutEyebrow,
       aboutTitle: data.draft.copy.aboutTitle,
       aboutBody: data.draft.copy.aboutBody,
@@ -175,71 +431,182 @@ export const AboutForm = ({ data }: CommonProps) => {
       expectedSettingsUpdatedAt: data.timestamps.settings
     }
   })
-  useUnsavedWarning(form.isDirty())
+  const principleFields = useFieldArray({ control: form.control, name: 'principles' })
+  useUnsavedWarning(form.formState.isDirty)
 
   return (
-    <form
-      className={classes.formCard}
-      onSubmit={form.onSubmit((values) =>
-        startTransition(async () => {
-          const response = await saveAbout(values)
-          setResult(response)
-          if (!response.ok) form.setErrors(errorsFrom(response))
-          else {
-            form.resetDirty(values)
-            router.refresh()
-          }
-        })
-      )}
-    >
-      <Stack gap="lg">
-        <div>
-          <Title order={2}>About</Title>
-          <Text c="dimmed">Narrative, principles, and supporting image.</Text>
-        </div>
-        <ResultAlert result={result} />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Eyebrow" required {...form.getInputProps('aboutEyebrow')} />
-          <TextInput label="Heading" required {...form.getInputProps('aboutTitle')} />
-        </SimpleGrid>
-        <Textarea label="About body" required minRows={5} maxLength={1600} {...form.getInputProps('aboutBody')} />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <Select
-            label="About image"
-            searchable
-            clearable
-            data={mediaOptions(data)}
-            {...form.getInputProps('aboutImageId')}
+    <Form {...form}>
+      <form
+        className={classes.formCard}
+        onSubmit={form.handleSubmit((values) =>
+          startTransition(async () => {
+            const response = await saveAbout(values)
+            setResult(response)
+            if (!response.ok) applyServerErrors(form, response.fieldErrors)
+            else {
+              form.reset(values)
+              router.refresh()
+            }
+          })
+        )}
+      >
+        <div className="flex flex-col gap-6">
+          <SectionHeading title="About" description="Narrative, principles, and supporting image." />
+          <ResultAlert result={result} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="aboutEyebrow"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Eyebrow</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="aboutTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Heading</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="aboutBody"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>About body</FormLabel>
+                <FormControl>
+                  <Textarea required className="min-h-28" maxLength={1600} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <TextInput label="Image alt text" required {...form.getInputProps('aboutImageAlt')} />
-          <TextInput label="Image caption label" required {...form.getInputProps('aboutCaptionLabel')} />
-        </SimpleGrid>
-        <Divider label="Principles" labelPosition="left" />
-        {form.values.principles.map((item, index) => (
-          <SimpleGrid key={item.id ?? index} cols={{ base: 1, sm: 2 }} className={classes.repeaterCard}>
-            <TextInput label="Title" required {...form.getInputProps(`principles.${index}.title`)} />
-            <Textarea label="Explanation" required minRows={2} {...form.getInputProps(`principles.${index}.text`)} />
-            <Switch label="Visible" {...form.getInputProps(`principles.${index}.enabled`, { type: 'checkbox' })} />
-            <Button
-              variant="subtle"
-              color="red"
-              leftSection={<HiOutlineTrash />}
-              onClick={() => form.removeListItem('principles', index)}
-            >
-              Remove
-            </Button>
-          </SimpleGrid>
-        ))}
-        <Button
-          variant="light"
-          leftSection={<HiOutlinePlus />}
-          onClick={() => form.insertListItem('principles', { id: crypto.randomUUID(), title: '', text: '', enabled: true })}
-        >
-          Add principle
-        </Button>
-        <FormFooter pending={pending} dirty={form.isDirty()} />
-      </Stack>
-    </form>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="aboutImageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>About image</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      clearable
+                      options={mediaOptions(data)}
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      placeholder="Select image"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="aboutImageAlt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image alt text</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="aboutCaptionLabel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image caption label</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <DividerLabel label="Principles" />
+          {principleFields.fields.map((item, index) => (
+            <div key={item.id} className={`grid gap-4 sm:grid-cols-2 ${classes.repeaterCard}`}>
+              <FormField
+                control={form.control}
+                name={`principles.${index}.title`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input required {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`principles.${index}.text`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Explanation</FormLabel>
+                    <FormControl>
+                      <Textarea required className="min-h-16" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`principles.${index}.enabled`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className="font-normal">Visible</FormLabel>
+                  </FormItem>
+                )}
+              />
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => principleFields.remove(index)}
+                >
+                  <HiOutlineTrash />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="light"
+            onClick={() => principleFields.append({ id: crypto.randomUUID(), title: '', text: '', enabled: true })}
+          >
+            <HiOutlinePlus />
+            Add principle
+          </Button>
+          <FormFooter pending={pending} dirty={form.formState.isDirty} />
+        </div>
+      </form>
+    </Form>
   )
 }
 
@@ -265,76 +632,147 @@ export const SectionCopyForm = ({ data, mode }: CommonProps & { mode: CopyMode }
     }
   })
 
-  const form = useForm({
-    mode: 'controlled',
-    initialValues: {
+  const form = useForm<SectionCopyValues>({
+    resolver: zodResolver(sectionCopyFormSchema) as Resolver<SectionCopyValues>,
+    defaultValues: {
       sections,
       contactPanelTitle: data.draft.copy.contactPanelTitle,
       contactPrivacyCopy: data.draft.copy.contactPrivacyCopy,
       expectedUpdatedAt: data.timestamps.copy
     }
   })
-  useUnsavedWarning(form.isDirty())
+  useUnsavedWarning(form.formState.isDirty)
+  const watchedSections = form.watch('sections')
 
   return (
-    <form
-      className={classes.formCard}
-      onSubmit={form.onSubmit((values) =>
-        startTransition(async () => {
-          const known = new Set(sectionKeys as readonly string[])
-          const mergedSections =
-            mode === 'contact'
-              ? [
-                  ...data.draft.sections.filter((item) => item.section !== 'CONTACT'),
-                  ...values.sections
-                ]
-              : [
-                  ...data.draft.sections.filter((item) => !known.has(item.section)),
-                  ...values.sections
-                ]
-          const response = await saveSectionCopy({
-            ...values,
-            sections: mergedSections
+    <Form {...form}>
+      <form
+        className={classes.formCard}
+        onSubmit={form.handleSubmit((values) =>
+          startTransition(async () => {
+            const known = new Set(sectionKeys as readonly string[])
+            const mergedSections =
+              mode === 'contact'
+                ? [...data.draft.sections.filter((item) => item.section !== 'CONTACT'), ...values.sections]
+                : [...data.draft.sections.filter((item) => !known.has(item.section)), ...values.sections]
+            const response = await saveSectionCopy({
+              ...values,
+              sections: mergedSections
+            })
+            setResult(response)
+            if (!response.ok) applyServerErrors(form, response.fieldErrors)
+            else {
+              form.reset(values)
+              router.refresh()
+            }
           })
-          setResult(response)
-          if (!response.ok) form.setErrors(errorsFrom(response))
-          else {
-            form.resetDirty(values)
-            router.refresh()
-          }
-        })
-      )}
-    >
-      <Stack gap="lg">
-        <div>
-          <Title order={2}>{mode === 'contact' ? 'Contact copy' : 'Section copy'}</Title>
-          <Text c="dimmed">
-            {mode === 'contact' ? 'Contact section labels and privacy notice.' : 'Headings and descriptions for major sections.'}
-          </Text>
+        )}
+      >
+        <div className="flex flex-col gap-6">
+          <SectionHeading
+            title={mode === 'contact' ? 'Contact copy' : 'Section copy'}
+            description={
+              mode === 'contact'
+                ? 'Contact section labels and privacy notice.'
+                : 'Headings and descriptions for major sections.'
+            }
+          />
+          <ResultAlert result={result} />
+          {watchedSections.map((section, index) => (
+            <div key={section.section} className={`flex flex-col gap-3 ${classes.repeaterCard}`}>
+              <p className="font-bold">{section.section}</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name={`sections.${index}.eyebrow`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Eyebrow</FormLabel>
+                      <FormControl>
+                        <Input required {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`sections.${index}.title`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input required {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name={`sections.${index}.description`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea required className="min-h-16" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {section.section === 'PUBLICATIONS' || section.section === 'CONTACT' ? (
+                <FormField
+                  control={form.control}
+                  name={`sections.${index}.actionLabel`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Action label</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+            </div>
+          ))}
+          {mode === 'contact' ? (
+            <>
+              <FormField
+                control={form.control}
+                name="contactPanelTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Panel title</FormLabel>
+                    <FormControl>
+                      <Input required {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contactPrivacyCopy"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Privacy copy</FormLabel>
+                    <FormControl>
+                      <Textarea required className="min-h-20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          ) : null}
+          <FormFooter pending={pending} dirty={form.formState.isDirty} />
         </div>
-        <ResultAlert result={result} />
-        {form.values.sections.map((section, index) => (
-          <Stack key={section.section} className={classes.repeaterCard} gap="sm">
-            <Text fw={700}>{section.section}</Text>
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <TextInput label="Eyebrow" required {...form.getInputProps(`sections.${index}.eyebrow`)} />
-              <TextInput label="Title" required {...form.getInputProps(`sections.${index}.title`)} />
-            </SimpleGrid>
-            <Textarea label="Description" required minRows={2} {...form.getInputProps(`sections.${index}.description`)} />
-            {section.section === 'PUBLICATIONS' || section.section === 'CONTACT' ? (
-              <TextInput label="Action label" {...form.getInputProps(`sections.${index}.actionLabel`)} />
-            ) : null}
-          </Stack>
-        ))}
-        {mode === 'contact' ? (
-          <>
-            <TextInput label="Panel title" required {...form.getInputProps('contactPanelTitle')} />
-            <Textarea label="Privacy copy" required minRows={3} {...form.getInputProps('contactPrivacyCopy')} />
-          </>
-        ) : null}
-        <FormFooter pending={pending} dirty={form.isDirty()} />
-      </Stack>
-    </form>
+      </form>
+    </Form>
   )
 }
 
@@ -343,80 +781,253 @@ export const SettingsForm = ({ data }: CommonProps) => {
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
   const { settings } = data.draft
-  const form = useForm({
-    mode: 'controlled',
-    initialValues: {
-      ...settings,
+  const form = useForm<SettingsValues>({
+    resolver: zodResolver(settingsFormSchema) as Resolver<SettingsValues>,
+    defaultValues: {
+      siteName: settings.siteName,
+      siteUrl: settings.siteUrl,
+      defaultTitle: settings.defaultTitle,
+      titleTemplate: settings.titleTemplate,
+      metaDescription: settings.metaDescription,
       keywords: settings.keywords,
+      openGraphTitle: settings.openGraphTitle,
+      openGraphDescription: settings.openGraphDescription,
+      twitterTitle: settings.twitterTitle,
+      twitterDescription: settings.twitterDescription,
       logoImageId: settings.logoImageId ?? null,
       openGraphImageId: settings.openGraphImageId ?? null,
       cvAssetId: settings.cvAssetId ?? null,
       expectedUpdatedAt: data.timestamps.settings
     }
   })
-  useUnsavedWarning(form.isDirty())
+  useUnsavedWarning(form.formState.isDirty)
 
   return (
-    <form
-      className={classes.formCard}
-      onSubmit={form.onSubmit((values) =>
-        startTransition(async () => {
-          const response = await saveSettings(values)
-          setResult(response)
-          if (!response.ok) form.setErrors(errorsFrom(response))
-          else {
-            form.resetDirty(values)
-            router.refresh()
-          }
-        })
-      )}
-    >
-      <Stack gap="lg">
-        <div>
-          <Title order={2}>SEO & Settings</Title>
-          <Text c="dimmed">Site metadata, social cards, logo, and CV.</Text>
-        </div>
-        <ResultAlert result={result} />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Site name" required {...form.getInputProps('siteName')} />
-          <TextInput label="Site URL" required {...form.getInputProps('siteUrl')} />
-          <TextInput label="Default title" required {...form.getInputProps('defaultTitle')} />
-          <TextInput label="Title template" required {...form.getInputProps('titleTemplate')} />
-        </SimpleGrid>
-        <Textarea label="Meta description" required minRows={3} {...form.getInputProps('metaDescription')} />
-        <TextInput
-          label="Keywords"
-          description="Comma-separated"
-          value={form.values.keywords.join(', ')}
-          onChange={(event) =>
-            form.setFieldValue(
-              'keywords',
-              event.currentTarget.value
-                .split(',')
-                .map((item) => item.trim())
-                .filter(Boolean)
-            )
-          }
-        />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Open Graph title" required {...form.getInputProps('openGraphTitle')} />
-          <TextInput label="Twitter title" required {...form.getInputProps('twitterTitle')} />
-        </SimpleGrid>
-        <Textarea label="Open Graph description" required minRows={2} {...form.getInputProps('openGraphDescription')} />
-        <Textarea label="Twitter description" required minRows={2} {...form.getInputProps('twitterDescription')} />
-        <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <Select label="Logo" searchable clearable data={mediaOptions(data)} {...form.getInputProps('logoImageId')} />
-          <Select
-            label="Open Graph image"
-            searchable
-            clearable
-            data={mediaOptions(data)}
-            {...form.getInputProps('openGraphImageId')}
+    <Form {...form}>
+      <form
+        className={classes.formCard}
+        onSubmit={form.handleSubmit((values) =>
+          startTransition(async () => {
+            const response = await saveSettings(values)
+            setResult(response)
+            if (!response.ok) applyServerErrors(form, response.fieldErrors)
+            else {
+              form.reset(values)
+              router.refresh()
+            }
+          })
+        )}
+      >
+        <div className="flex flex-col gap-6">
+          <SectionHeading title="SEO & Settings" description="Site metadata, social cards, logo, and CV." />
+          <ResultAlert result={result} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="siteName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Site name</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="siteUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Site URL</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="defaultTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Default title</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="titleTemplate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title template</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="metaDescription"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Meta description</FormLabel>
+                <FormControl>
+                  <Textarea required className="min-h-20" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <Select label="CV PDF" searchable clearable data={mediaOptions(data, 'PDF')} {...form.getInputProps('cvAssetId')} />
-        </SimpleGrid>
-        <FormFooter pending={pending} dirty={form.isDirty()} />
-      </Stack>
-    </form>
+          <FormField
+            control={form.control}
+            name="keywords"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Keywords</FormLabel>
+                <FormDescription>Comma-separated</FormDescription>
+                <FormControl>
+                  <Input
+                    value={field.value.join(', ')}
+                    onChange={(event) =>
+                      field.onChange(
+                        event.target.value
+                          .split(',')
+                          .map((item) => item.trim())
+                          .filter(Boolean)
+                      )
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="openGraphTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Open Graph title</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="twitterTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Twitter title</FormLabel>
+                  <FormControl>
+                    <Input required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="openGraphDescription"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Open Graph description</FormLabel>
+                <FormControl>
+                  <Textarea required className="min-h-16" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="twitterDescription"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Twitter description</FormLabel>
+                <FormControl>
+                  <Textarea required className="min-h-16" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField
+              control={form.control}
+              name="logoImageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Logo</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      clearable
+                      options={mediaOptions(data)}
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      placeholder="Select logo"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="openGraphImageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Open Graph image</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      clearable
+                      options={mediaOptions(data)}
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      placeholder="Select image"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cvAssetId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CV PDF</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      clearable
+                      options={mediaOptions(data, 'PDF')}
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      placeholder="Select PDF"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormFooter pending={pending} dirty={form.formState.isDirty} />
+        </div>
+      </form>
+    </Form>
   )
 }

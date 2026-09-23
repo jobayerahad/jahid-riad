@@ -1,8 +1,8 @@
 import Image from 'next/image'
-import { Container, Text, Title } from '@mantine/core'
 import { HiArrowDown, HiArrowRight } from 'react-icons/hi2'
 import { getPortfolioContent } from '@/data/portfolio'
 import { getHeroActions, getHeroIntroduction, getHeroPortrait, getHeroStatement } from '@/lib/portfolio-presentation'
+import { Container } from '@/components/ui/container'
 import Reveal, { MotionGroup } from '@/components/ui/reveal'
 import classes from './styles.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
@@ -19,17 +19,17 @@ const Hero = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
         <div className={classes.layout}>
           <MotionGroup className={classes.copy} trigger="load" stagger={0.09} delayChildren={0.06}>
             <Reveal grouped>
-              <Text className={classes.eyebrow}>
+              <p className={classes.eyebrow}>
                 {profile.shortName} <span aria-hidden="true">·</span> {profile.location}
-              </Text>
+              </p>
             </Reveal>
             <Reveal grouped>
-              <Title order={1} id="hero-title" className={classes.title}>
+              <h1 id="hero-title" className={classes.title}>
                 {getHeroStatement(snapshot)}
-              </Title>
+              </h1>
             </Reveal>
             <Reveal grouped>
-              <Text className={classes.introduction}>{getHeroIntroduction(snapshot)}</Text>
+              <p className={classes.introduction}>{getHeroIntroduction(snapshot)}</p>
             </Reveal>
 
             <Reveal grouped className={classes.actions}>

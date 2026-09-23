@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Container, Text, Title } from '@mantine/core'
 import { HiArrowRight, HiOutlineUser } from 'react-icons/hi2'
 import { getPortfolioContent } from '@/data/portfolio'
 import { getAboutPortrait, getAboutSummary } from '@/lib/portfolio-presentation'
+import { Container } from '@/components/ui/container'
 import Reveal, { MotionGroup } from '@/components/ui/reveal'
 import classes from './styles.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
@@ -28,26 +28,24 @@ const About = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
                   className={classes.image}
                 />
               </div>
-              <Text component="p">
+              <p>
                 {profile.shortName} · {profile.location}
-              </Text>
+              </p>
             </Reveal>
           ) : null}
 
           <MotionGroup className={classes.copy} stagger={0.08}>
             <Reveal grouped direction="right">
-              <Text className={classes.eyebrow}>
+              <p className={classes.eyebrow}>
                 <HiOutlineUser aria-hidden="true" />
                 {copy.aboutEyebrow === 'Current focus' ? 'About' : copy.aboutEyebrow}
-              </Text>
+              </p>
             </Reveal>
             <Reveal grouped direction="right">
-              <Title order={2} id="about-title">
-                {copy.aboutTitle}
-              </Title>
+              <h2 id="about-title">{copy.aboutTitle}</h2>
             </Reveal>
             <Reveal grouped direction="right">
-              <Text className={classes.lead}>{getAboutSummary(snapshot)}</Text>
+              <p className={classes.lead}>{getAboutSummary(snapshot)}</p>
             </Reveal>
             <Reveal grouped direction="right">
               <Link href="/profile" className={classes.link}>

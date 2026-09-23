@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { Container, Text, Title } from '@mantine/core'
 import Education from '@/components/education'
 import Experience from '@/components/experience'
 import Footer from '@/components/footer'
 import Header from '@/components/header'
 import Learning from '@/components/learning'
 import Skills from '@/components/skills'
+import { Container } from '@/components/ui/container'
 import { getPortfolioContent } from '@/data/portfolio'
 import classes from './styles.module.css'
 
@@ -27,11 +27,11 @@ const ProfilePage = async () => {
       <main id="main-content">
         <header className={classes.hero}>
           <Container size="xl">
-            <Text className={classes.eyebrow}>Profile &amp; background</Text>
-            <Title order={1}>The supporting record.</Title>
-            <Text className={classes.intro}>
+            <p className={classes.eyebrow}>Profile &amp; background</p>
+            <h1>The supporting record.</h1>
+            <p className={classes.intro}>
               A detailed view of the experience, education, and capabilities behind the selected work and research.
-            </Text>
+            </p>
           </Container>
         </header>
         <Experience content={content} />

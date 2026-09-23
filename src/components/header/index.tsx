@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Burger, Container, Drawer, Group } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { HiArrowUpRight } from 'react-icons/hi2'
-import ColorSchemeToggle from '@/components/ui/color-scheme-toggle'
+import { HiArrowUpRight, HiBars3, HiXMark } from 'react-icons/hi2'
+import { Button } from '@/components/ui/button'
+import { Container } from '@/components/ui/container'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import classes from './styles.module.css'
 
 const pageLinks = [
@@ -24,9 +24,12 @@ const sectionLinks = [
 const Header = () => {
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const [opened, { toggle, close }] = useDisclosure(false)
+  const [opened, setOpened] = useState(false)
   const [activeSection, setActiveSection] = useState('')
   const [scrolled, setScrolled] = useState(false)
+
+  const close = () => setOpened(false)
+  const toggle = () => setOpened((value) => !value)
 
   useEffect(() => {
     const updateHeader = () => setScrolled(window.scrollY > 18)
@@ -98,35 +101,28 @@ const Header = () => {
         <nav className={classes.desktopNav} aria-label="Primary navigation">
           {allNav}
         </nav>
-        <Group gap="xs" wrap="nowrap">
-          <ColorSchemeToggle />
-          <Burger
-            className={classes.burger}
-            opened={opened}
-            onClick={toggle}
-            hiddenFrom="md"
-            size="sm"
-            aria-label={opened ? 'Close navigation menu' : 'Open navigation menu'}
-            aria-expanded={opened}
-            aria-controls="mobile-navigation"
-          />
-        </Group>
-        <Drawer
-          id="mobile-navigation"
-          opened={opened}
-          onClose={close}
-          title="Navigation"
-          position="right"
-          size="min(22rem, 100%)"
-          padding="lg"
-          hiddenFrom="md"
-          transitionProps={{ transition: 'slide-left', duration: 220 }}
-          classNames={{ title: classes.drawerTitle }}
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className={`${classes.burger} md:hidden`}
+          onClick={toggle}
+          aria-label={opened ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={opened}
+          aria-controls="mobile-navigation"
         >
-          <nav className={classes.mobileNav} aria-label="Mobile navigation">
-            {allNav}
-          </nav>
-        </Drawer>
+          {opened ? <HiXMark aria-hidden="true" /> : <HiBars3 aria-hidden="true" />}
+        </Button>
+        <Sheet open={opened} onOpenChange={setOpened}>
+          <SheetContent id="mobile-navigation" side="right" className="w-[min(22rem,100%)] p-6" showCloseButton={false}>
+            <SheetHeader className="px-0 pt-0">
+              <SheetTitle className={classes.drawerTitle}>Navigation</SheetTitle>
+            </SheetHeader>
+            <nav className={classes.mobileNav} aria-label="Mobile navigation">
+              {allNav}
+            </nav>
+          </SheetContent>
+        </Sheet>
       </Container>
     </header>
   )

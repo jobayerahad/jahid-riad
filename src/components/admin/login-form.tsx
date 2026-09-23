@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, Button, Paper, PasswordInput, Stack, TextInput, Title } from '@mantine/core'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { signInAdmin } from '@/actions/auth'
 
 const AdminLoginForm = () => {
@@ -26,19 +29,29 @@ const AdminLoginForm = () => {
   }
 
   return (
-    <Paper component="form" action={submit} withBorder radius="md" p="xl" maw={440} w="100%">
-      <Stack>
-        <Title order={1} size="h2">
+    <form action={submit} className="w-full max-w-[440px] rounded-md border bg-card p-8 shadow-sm">
+      <div className="flex flex-col gap-4">
+        <h1 className="font-[family-name:var(--font-space-grotesk)] text-2xl font-bold tracking-tight">
           Portfolio admin
-        </Title>
-        {error && <Alert color="red">{error}</Alert>}
-        <TextInput name="email" type="email" label="Admin email" autoComplete="username" required />
-        <PasswordInput name="password" label="Password" autoComplete="current-password" required />
+        </h1>
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        <div className="grid gap-2">
+          <Label htmlFor="admin-email">Admin email</Label>
+          <Input id="admin-email" name="email" type="email" autoComplete="username" required />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="admin-password">Password</Label>
+          <Input id="admin-password" name="password" type="password" autoComplete="current-password" required />
+        </div>
         <Button type="submit" loading={pending}>
           Sign in
         </Button>
-      </Stack>
-    </Paper>
+      </div>
+    </form>
   )
 }
 

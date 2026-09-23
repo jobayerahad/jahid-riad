@@ -1,4 +1,3 @@
-import { Text, Title } from '@mantine/core'
 import classes from './section-header.module.css'
 
 type Props = {
@@ -12,11 +11,11 @@ type Props = {
 
 const SectionHeader = ({ id, eyebrow, title, description, align = 'center', inverse = false }: Props) => (
   <header className={classes.header} data-align={align} data-inverse={inverse || undefined}>
-    {eyebrow && <Text className={classes.eyebrow}>{eyebrow}</Text>}
-    <Title order={2} id={id} className={classes.title}>
+    {eyebrow && <p className={classes.eyebrow}>{eyebrow}</p>}
+    <h2 id={id} className={classes.title}>
       {title}
-    </Title>
-    {description && <Text className={classes.description}>{description}</Text>}
+    </h2>
+    {description && <p className={classes.description}>{description}</p>}
   </header>
 )
 

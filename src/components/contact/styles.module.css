@@ -135,10 +135,11 @@
   border: 1px solid rgb(255 255 255 / 18%);
   border-radius: var(--radius-card);
 }
-.formCard :global(.mantine-Input-label) {
+.formCard label {
   color: white;
 }
-.formCard :global(.mantine-Input-input) {
+.formCard input,
+.formCard textarea {
   min-height: 44px;
   border-color: rgb(255 255 255 / 28%);
   background: #f7f7f2;

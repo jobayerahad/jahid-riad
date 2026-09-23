@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Alert, Button, Stack, TextInput, Textarea } from '@mantine/core'
-import { schemaResolver, useForm } from '@mantine/form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, type Resolver } from 'react-hook-form'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { HiOutlinePaperAirplane } from 'react-icons/hi2'
 import { sendMessage } from '@/actions/contact'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { contactClientSchema, type ContactClientInput } from '@/schemas/contact'
 import type { ContactResult } from '@/types'
 import classes from './styles.module.css'
@@ -19,9 +24,8 @@ const ContactForm = ({ configured }: Props) => {
   const [result, setResult] = useState<ContactResult | null>(null)
   const recaptcha = useGoogleReCaptcha()
   const form = useForm<ContactClientInput>({
-    mode: 'uncontrolled',
-    initialValues: INITIAL_VALUES,
-    validate: schemaResolver(contactClientSchema, { sync: true })
+    resolver: zodResolver(contactClientSchema) as Resolver<ContactClientInput>,
+    defaultValues: INITIAL_VALUES
   })
 
   const focusFirstError = () => {
@@ -42,9 +46,11 @@ const ContactForm = ({ configured }: Props) => {
       const response = await sendMessage({ ...values, token })
       setResult(response)
 
-      if (response.ok) form.reset()
+      if (response.ok) form.reset(INITIAL_VALUES)
       else if (response.fieldErrors) {
-        form.setErrors(response.fieldErrors)
+        for (const [name, message] of Object.entries(response.fieldErrors)) {
+          form.setError(name as keyof ContactClientInput, { message })
+        }
         focusFirstError()
       }
     })
@@ -52,72 +58,104 @@ const ContactForm = ({ configured }: Props) => {
 
   return (
     <div className={classes.formCard}>
-      <form
-        id="contact-form"
-        noValidate
-        onSubmit={form.onSubmit(handleSubmit, focusFirstError)}
-        aria-describedby={result ? 'contact-result' : undefined}
-      >
-        <Stack gap="md">
-          <TextInput
-            required
-            label="Name"
-            placeholder="Your name"
-            autoComplete="name"
-            key={form.key('name')}
-            {...form.getInputProps('name')}
+      <Form {...form}>
+        <form
+          id="contact-form"
+          noValidate
+          onSubmit={form.handleSubmit(handleSubmit, focusFirstError)}
+          aria-describedby={result ? 'contact-result' : undefined}
+          className="flex flex-col gap-4"
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input required placeholder="Your name" autoComplete="name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <TextInput
-            required
-            type="email"
-            label="Email"
-            placeholder="you@example.com"
-            autoComplete="email"
-            inputMode="email"
-            key={form.key('email')}
-            {...form.getInputProps('email')}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    required
+                    type="email"
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    inputMode="email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <TextInput
-            required
-            label="Subject"
-            placeholder="What would you like to discuss?"
-            autoComplete="off"
-            key={form.key('subject')}
-            {...form.getInputProps('subject')}
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject</FormLabel>
+                <FormControl>
+                  <Input required placeholder="What would you like to discuss?" autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <Textarea
-            required
-            label="Message"
-            placeholder="Share the context, goal, and any useful timeline."
-            minRows={4}
-            autosize
-            key={form.key('message')}
-            {...form.getInputProps('message')}
+          <FormField
+            control={form.control}
+            name="message"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Message</FormLabel>
+                <FormControl>
+                  <Textarea
+                    required
+                    placeholder="Share the context, goal, and any useful timeline."
+                    className="min-h-24"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
-          {result && (
-            <Alert id="contact-result" role={result.ok ? 'status' : 'alert'} color={result.ok ? 'teal' : 'red'}>
-              {result.message}
+          {result ? (
+            <Alert
+              id="contact-result"
+              role={result.ok ? 'status' : 'alert'}
+              variant={result.ok ? 'default' : 'destructive'}
+              className={result.ok ? 'border-teal-200 bg-teal-50 text-teal-900' : undefined}
+            >
+              <AlertDescription>{result.message}</AlertDescription>
             </Alert>
-          )}
+          ) : null}
 
-          {!configured && (
-            <Alert role="status" color="yellow">
-              The form is not configured in this environment. Please try again later.
+          {!configured ? (
+            <Alert role="status" className="border-amber-200 bg-amber-50 text-amber-900">
+              <AlertDescription>
+                The form is not configured in this environment. Please try again later.
+              </AlertDescription>
             </Alert>
-          )}
+          ) : null}
 
-          <Button
-            type="submit"
-            size="md"
-            rightSection={<HiOutlinePaperAirplane aria-hidden="true" />}
-            loading={pending}
-            disabled={!configured}
-          >
+          <Button type="submit" size="lg" loading={pending} disabled={!configured}>
             Send message
+            <HiOutlinePaperAirplane aria-hidden="true" />
           </Button>
-        </Stack>
-      </form>
+        </form>
+      </Form>
     </div>
   )
 }

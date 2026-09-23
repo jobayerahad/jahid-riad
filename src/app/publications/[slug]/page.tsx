@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Container, Text, Title } from '@mantine/core'
 import { HiArrowUpRight, HiOutlineArrowLeft } from 'react-icons/hi2'
 import Footer from '@/components/footer'
 import Header from '@/components/header'
 import BibtexBlock from '@/components/publications/bibtex'
+import { Container } from '@/components/ui/container'
 import { getPortfolioContent } from '@/data/portfolio'
 import { formatPublicationType, normalizeAuthors } from '@/lib/bibtex'
 import classes from './styles.module.css'
@@ -76,29 +76,27 @@ const PublicationDetailPage = async ({ params }: Props) => {
             <Link href="/publications" className={classes.back}>
               <HiOutlineArrowLeft aria-hidden="true" /> All publications
             </Link>
-            <Text className={classes.meta}>
+            <p className={classes.meta}>
               {publication.year} · {formatPublicationType(publication.type)}
               {publication.status && publication.status !== 'PUBLISHED' ? ` · ${publication.status}` : ''}
-            </Text>
-            <Title order={1}>{publication.title}</Title>
-            <Text className={classes.authors}>
+            </p>
+            <h1>{publication.title}</h1>
+            <p className={classes.authors}>
               {authors.map((author, index) => (
                 <span key={`${author.name}-${index}`}>
                   {index > 0 ? ', ' : ''}
                   {author.isSelf ? <strong>{author.name}</strong> : author.name}
                 </span>
               ))}
-            </Text>
+            </p>
             {publication.venue ? (
-              <Text className={classes.venue}>
+              <p className={classes.venue}>
                 {publication.venue}
                 {publication.pages ? `, pp. ${publication.pages}` : ''}
-              </Text>
+              </p>
             ) : null}
-            {publication.abstract ? <Text className={classes.abstract}>{publication.abstract}</Text> : null}
-            {publication.topics.length ? (
-              <Text className={classes.topics}>{publication.topics.join(' · ')}</Text>
-            ) : null}
+            {publication.abstract ? <p className={classes.abstract}>{publication.abstract}</p> : null}
+            {publication.topics.length ? <p className={classes.topics}>{publication.topics.join(' · ')}</p> : null}
             <div className={classes.links}>
               {publication.doi ? (
                 <a href={`https://doi.org/${publication.doi}`} target="_blank" rel="noopener noreferrer">

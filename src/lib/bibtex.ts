@@ -7,7 +7,11 @@ const authorNames = (publication: Publication) =>
 
 const bibtexKey = (publication: Publication) => {
   const first = authorNames(publication)[0] ?? 'riad'
-  const lastName = first.split(/\s+/).at(-1)?.replace(/[^a-zA-Z]/g, '') || 'riad'
+  const lastName =
+    first
+      .split(/\s+/)
+      .at(-1)
+      ?.replace(/[^a-zA-Z]/g, '') || 'riad'
   return `${lastName.toLowerCase()}${publication.year}${publication.slug.slice(0, 24).replace(/-/g, '')}`
 }
 
@@ -64,5 +68,9 @@ export const generateBibtex = (publication: Publication) => {
   return lines.join('\n')
 }
 
-export const normalizeAuthors = (authors: Publication['authors'] | Array<string | { name: string; isSelf?: boolean }>) =>
-  (authors ?? []).map((author) => (typeof author === 'string' ? { name: author, isSelf: /jahid|riad/i.test(author) } : author))
+export const normalizeAuthors = (
+  authors: Publication['authors'] | Array<string | { name: string; isSelf?: boolean }>
+) =>
+  (authors ?? []).map((author) =>
+    typeof author === 'string' ? { name: author, isSelf: /jahid|riad/i.test(author) } : author
+  )

@@ -1,11 +1,8 @@
 import clsx from 'clsx'
 import type { Metadata } from 'next'
-import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core'
 import localFont from 'next/font/local'
-import '@mantine/core/styles.css'
 import './globals.css'
 import AnalyticsConsent from '@/components/ui/analytics-consent'
-import { theme } from '@/config/theme'
 import { getPortfolioContent } from '@/data/portfolio'
 import type { WrapperProps } from '@/types'
 
@@ -60,17 +57,10 @@ const RootLayout = ({ children }: WrapperProps) => {
   const analyticsId = process.env.GA_TRACKING_ID
 
   return (
-    <html lang="en" className={clsx(spaceGrotesk.variable, inter.variable)} {...mantineHtmlProps}>
-      <head>
-        <ColorSchemeScript defaultColorScheme="light" />
-      </head>
+    <html lang="en" className={clsx(spaceGrotesk.variable, inter.variable)}>
       <body suppressHydrationWarning>
-        <MantineProvider defaultColorScheme="light" theme={theme} classNamesPrefix="jr">
-          {children}
-          {process.env.NODE_ENV === 'production' && analyticsId ? (
-            <AnalyticsConsent gaId={analyticsId} />
-          ) : null}
-        </MantineProvider>
+        {children}
+        {process.env.NODE_ENV === 'production' && analyticsId ? <AnalyticsConsent gaId={analyticsId} /> : null}
       </body>
     </html>
   )

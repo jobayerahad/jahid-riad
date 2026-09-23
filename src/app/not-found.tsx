@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Container, Title, Text, Button, SimpleGrid, Group, Flex } from '@mantine/core'
-import { IoHome } from 'react-icons/io5'
 import { FaArrowLeft } from 'react-icons/fa6'
+import { IoHome } from 'react-icons/io5'
+import { Button } from '@/components/ui/button'
+import { Container } from '@/components/ui/container'
 import classes from './not-found.module.css'
 
 const NotFound = () => {
@@ -13,32 +14,28 @@ const NotFound = () => {
   return (
     <main className={classes.wrapper}>
       <Container size="md">
-        <SimpleGrid cols={{ base: 1, md: 2 }}>
-          <Flex direction="column" justify="center">
-            <Title size="2rem" c="white" mb="lg">
-              Page not found
-            </Title>
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+          <div className="flex flex-col justify-center">
+            <h1 className="mb-6 text-[2rem] text-white">Page not found</h1>
 
-            <Text mb="md" c="white">
+            <p className="mb-4 text-white">
               The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
-            </Text>
+            </p>
 
-            <Group>
-              <Button component={Link} href="/" size="md" leftSection={<IoHome aria-hidden="true" />}>
-                Go Home
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="default">
+                <Link href="/">
+                  <IoHome aria-hidden="true" />
+                  Go Home
+                </Link>
               </Button>
 
-              <Button
-                color="white"
-                variant="outline"
-                size="md"
-                leftSection={<FaArrowLeft aria-hidden="true" />}
-                onClick={back}
-              >
+              <Button variant="outline" className="border-white text-white hover:bg-white/10" onClick={back}>
+                <FaArrowLeft aria-hidden="true" />
                 Go Back
               </Button>
-            </Group>
-          </Flex>
+            </div>
+          </div>
 
           <div className={classes.illustration} aria-hidden="true">
             <div className={classes.orbit}></div>
@@ -49,7 +46,7 @@ const NotFound = () => {
               <div className={classes.rocketFire}></div>
             </div>
           </div>
-        </SimpleGrid>
+        </div>
       </Container>
     </main>
   )

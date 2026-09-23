@@ -124,15 +124,8 @@ const toSocialPlatform = (kind: string): SocialPlatform => {
   return SocialPlatform.WEBSITE
 }
 
-const fromSocialPlatform = (kind: SocialPlatform | string) => String(kind).toLowerCase() as
-  | 'linkedin'
-  | 'scholar'
-  | 'github'
-  | 'orcid'
-  | 'researchgate'
-  | 'x'
-  | 'email'
-  | 'website'
+const fromSocialPlatform = (kind: SocialPlatform | string) =>
+  String(kind).toLowerCase() as 'linkedin' | 'scholar' | 'github' | 'orcid' | 'researchgate' | 'x' | 'email' | 'website'
 
 export const fallbackPublishedSnapshot: PublishedPortfolioSnapshot = publishedPortfolioSnapshotSchema.parse({
   schemaVersion: 2,
@@ -181,8 +174,15 @@ const monthYear = (value: Date) =>
 const experiencePeriod = (startDate: Date, endDate: Date | null) =>
   `${monthYear(startDate)} – ${endDate ? monthYear(endDate) : 'Present'}`
 
-const sectionMap = (sections: Array<{ section: SiteSection; eyebrow: string; title: string; description: string; actionLabel: string | null }>) =>
-  Object.fromEntries(sections.map((section) => [section.section, section]))
+const sectionMap = (
+  sections: Array<{
+    section: SiteSection
+    eyebrow: string
+    title: string
+    description: string
+    actionLabel: string | null
+  }>
+) => Object.fromEntries(sections.map((section) => [section.section, section]))
 
 const buildFlatCopy = (
   hero: {
@@ -195,9 +195,21 @@ const buildFlatCopy = (
     secondaryHref: string
     focusLabel: string
   },
-  sections: Array<{ section: SiteSection; eyebrow: string; title: string; description: string; actionLabel: string | null }>,
+  sections: Array<{
+    section: SiteSection
+    eyebrow: string
+    title: string
+    description: string
+    actionLabel: string | null
+  }>,
   principles: Array<{ id: string; title: string; text: string; enabled: boolean }>,
-  aboutExtras: { aboutBody: string; aboutImageAlt: string; aboutCaptionLabel: string; contactPanelTitle: string; contactPrivacyCopy: string }
+  aboutExtras: {
+    aboutBody: string
+    aboutImageAlt: string
+    aboutCaptionLabel: string
+    contactPanelTitle: string
+    contactPrivacyCopy: string
+  }
 ) => {
   const bySection = sectionMap(sections)
   const about = bySection[SiteSection.ABOUT] ?? bySection.ABOUT
@@ -317,10 +329,7 @@ export const readDraftSnapshot = async (db: DbClient = prisma): Promise<Publishe
 
   const copy = buildFlatCopy(hero, sections, principleRows, {
     aboutBody: aboutSection?.description ?? defaultContentCopy.aboutBody,
-    aboutImageAlt:
-      profileDraft.aboutImageAlt ||
-      settings.aboutImage?.altText ||
-      defaultContentCopy.aboutImageAlt,
+    aboutImageAlt: profileDraft.aboutImageAlt || settings.aboutImage?.altText || defaultContentCopy.aboutImageAlt,
     aboutCaptionLabel: profileDraft.aboutCaptionLabel || defaultContentCopy.aboutCaptionLabel,
     contactPanelTitle: profileDraft.contactPanelTitle || defaultContentCopy.contactPanelTitle,
     contactPrivacyCopy: profileDraft.contactPrivacyCopy || defaultContentCopy.contactPrivacyCopy

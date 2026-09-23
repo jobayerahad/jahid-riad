@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Text, Title } from '@mantine/core'
 import { HiArrowUpRight } from 'react-icons/hi2'
 import { formatPublicationType, normalizeAuthors } from '@/lib/bibtex'
 import type { Publication } from '@/types/content'
@@ -18,6 +17,7 @@ const PublicationCard = ({ publication, headingOrder = 3 }: Props) => {
       : publication.scholarUrl
         ? 'View Scholar profile'
         : 'View details'
+  const Heading = headingOrder === 2 ? 'h2' : 'h3'
 
   return (
     <article id={publication.id} className={classes.row}>
@@ -26,37 +26,37 @@ const PublicationCard = ({ publication, headingOrder = 3 }: Props) => {
         <span>{formatPublicationType(publication.type)}</span>
       </div>
       <div className={classes.content}>
-        <Title order={headingOrder}>
+        <Heading>
           <Link href={`/publications/${slug}`} className={classes.titleLink}>
             {publication.title}
           </Link>
-        </Title>
+        </Heading>
         {authors.length ? (
-          <Text className={classes.authors}>
+          <p className={classes.authors}>
             {authors.map((author, index) => (
               <span key={`${author.name}-${index}`}>
                 {index > 0 ? ', ' : ''}
                 {author.isSelf ? <strong>{author.name}</strong> : author.name}
               </span>
             ))}
-          </Text>
+          </p>
         ) : null}
         {publication.venue ? (
-          <Text className={classes.venue}>
+          <p className={classes.venue}>
             {publication.venue}
             {publication.pages ? `, pp. ${publication.pages}` : ''}
-          </Text>
+          </p>
         ) : null}
         {publication.doi ? (
-          <Text className={classes.doi}>
+          <p className={classes.doi}>
             DOI:{' '}
             <a href={`https://doi.org/${publication.doi}`} target="_blank" rel="noopener noreferrer">
               {publication.doi}
             </a>
-          </Text>
+          </p>
         ) : null}
-        {publication.abstract ? <Text className={classes.abstract}>{publication.abstract}</Text> : null}
-        {publication.topics.length ? <Text className={classes.topics}>{publication.topics.join(' / ')}</Text> : null}
+        {publication.abstract ? <p className={classes.abstract}>{publication.abstract}</p> : null}
+        {publication.topics.length ? <p className={classes.topics}>{publication.topics.join(' / ')}</p> : null}
         <div className={classes.actions}>
           <Link href={`/publications/${slug}`} className={classes.link}>
             View details

@@ -1,4 +1,4 @@
-import { Container, Text, Title } from '@mantine/core'
+import { Container } from '@/components/ui/container'
 import SectionHeader from '@/components/ui/section-header'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 import classes from './styles.module.css'
@@ -23,7 +23,7 @@ const Learning = ({ content }: Props) => {
         />
         <div className={classes.layout}>
           <div>
-            <Title order={3}>Courses &amp; reviewing</Title>
+            <h3>Courses &amp; reviewing</h3>
             <ul className={classes.list}>
               {items.map((item) => (
                 <li key={item.id}>
@@ -34,21 +34,21 @@ const Learning = ({ content }: Props) => {
                   ) : (
                     <span>{item.title}</span>
                   )}
-                  <Text component="span">
+                  <span>
                     {item.issuer}
                     {item.year ? ` · ${item.year}` : ''}
-                  </Text>
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
           <div>
-            <Title order={3}>Languages</Title>
+            <h3>Languages</h3>
             <ul className={classes.list}>
               {languages.map((item) => (
                 <li key={item.name}>
                   <span>{item.name}</span>
-                  <Text component="span">{item.level}</Text>
+                  <span>{item.level}</span>
                 </li>
               ))}
             </ul>

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { Container, Text, Title } from '@mantine/core'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import PublicationFilters from '@/components/publications/filters'
+import { Container } from '@/components/ui/container'
 import { getPortfolioContent } from '@/data/portfolio'
 import { normalizeAuthors } from '@/lib/bibtex'
 import classes from './styles.module.css'
@@ -65,9 +65,9 @@ const PublicationsPage = async () => {
       <main id="main-content">
         <header className={classes.hero}>
           <Container size="xl">
-            <Text className={classes.eyebrow}>{content.copy.publicationsEyebrow}</Text>
-            <Title order={1}>{content.copy.publicationsTitle}</Title>
-            <Text className={classes.intro}>{content.copy.publicationsDescription}</Text>
+            <p className={classes.eyebrow}>{content.copy.publicationsEyebrow}</p>
+            <h1>{content.copy.publicationsTitle}</h1>
+            <p className={classes.intro}>{content.copy.publicationsDescription}</p>
           </Container>
         </header>
 

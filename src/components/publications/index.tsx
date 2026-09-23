@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { Container, Text, Title } from '@mantine/core'
 import { HiArrowRight, HiArrowUpRight, HiOutlineBeaker } from 'react-icons/hi2'
 import { getPortfolioContent } from '@/data/portfolio'
+import { Container } from '@/components/ui/container'
 import Reveal, { MotionGroup } from '@/components/ui/reveal'
 import classes from './styles.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
@@ -25,13 +25,11 @@ const Publications = async ({ content }: { content?: PublishedPortfolioSnapshot 
       <Container size="xl">
         <div className={classes.layout}>
           <Reveal as="header" className={classes.heading} direction="left">
-            <Text className={classes.eyebrow}>
+            <p className={classes.eyebrow}>
               <HiOutlineBeaker aria-hidden="true" /> {copy.publicationsEyebrow}
-            </Text>
-            <Title order={2} id="research-title">
-              {copy.publicationsTitle}
-            </Title>
-            <Text>{copy.publicationsDescription}</Text>
+            </p>
+            <h2 id="research-title">{copy.publicationsTitle}</h2>
+            <p>{copy.publicationsDescription}</p>
             <Link href="/publications" className={classes.indexLink}>
               {copy.publicationsActionLabel} <HiArrowRight aria-hidden="true" />
             </Link>
@@ -50,14 +48,14 @@ const Publications = async ({ content }: { content?: PublishedPortfolioSnapshot 
                     className={classes.itemLink}
                     aria-label={`View research: ${publication.title}`}
                   >
-                    <Text className={classes.number}>0{index + 1}</Text>
+                    <p className={classes.number}>0{index + 1}</p>
                     <div className={classes.copy}>
-                      <Text className={classes.meta}>
+                      <p className={classes.meta}>
                         <time dateTime={String(publication.year)}>{publication.year}</time>
                         {venue ? ` · ${venue}` : ''}
-                      </Text>
-                      <Title order={3}>{publication.title}</Title>
-                      <Text className={classes.context}>{concise(context)}</Text>
+                      </p>
+                      <h3>{publication.title}</h3>
+                      <p className={classes.context}>{concise(context)}</p>
                     </div>
                     <span className={classes.paperLink}>
                       <span>View</span>

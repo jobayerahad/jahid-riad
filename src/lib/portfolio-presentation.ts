@@ -11,8 +11,7 @@ export const getHeroStatement = (snapshot: Snapshot) => {
 
 export const getAboutPortrait = (settings: Snapshot['settings']) => settings.aboutImage
 
-export const getContactPortrait = (settings: Snapshot['settings']) =>
-  settings.aboutImage ?? settings.heroImage ?? null
+export const getContactPortrait = (settings: Snapshot['settings']) => settings.aboutImage ?? settings.heroImage ?? null
 
 export const getHeroActions = (snapshot: Snapshot) => {
   const hero = snapshot.hero

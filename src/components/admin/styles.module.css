@@ -88,6 +88,18 @@
   backdrop-filter: blur(12px);
 }
 
+.adminHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.adminHeaderBadge {
+  display: inline-flex;
+}
+
 .adminMain {
   max-width: 92rem;
   min-height: calc(100svh - 68px);
@@ -172,6 +184,10 @@
   background: #fff1f0;
 }
 
+.menuButton {
+  display: none;
+}
+
 @media (max-width: 62em) {
   .sidebar {
     display: none;
@@ -182,8 +198,8 @@
     margin-left: 0;
   }
 
-  .adminHeader :global(.mantine-Group-root) {
-    flex-wrap: wrap;
+  .menuButton {
+    display: inline-flex;
   }
 }
 
@@ -192,12 +208,8 @@
     align-items: flex-start;
   }
 
-  .adminHeader :global(.mantine-Badge-root) {
+  .adminHeaderBadge {
     display: none;
-  }
-
-  .adminHeader :global(.mantine-Button-label) {
-    font-size: 0.78rem;
   }
 
   .adminMain {

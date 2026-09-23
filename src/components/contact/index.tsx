@@ -1,7 +1,7 @@
 import Image from 'next/image'
-import { Container, Text, Title } from '@mantine/core'
 import { HiOutlineEnvelope, HiOutlineMapPin } from 'react-icons/hi2'
 import SocialLinks from '@/components/ui/social-links'
+import { Container } from '@/components/ui/container'
 import Reveal, { MotionGroup } from '@/components/ui/reveal'
 import { getPortfolioContent } from '@/data/portfolio'
 import { getContactPortrait } from '@/lib/portfolio-presentation'
@@ -20,17 +20,15 @@ const Contact = async ({ content }: { content?: PublishedPortfolioSnapshot }) =>
         <div className={classes.grid}>
           <MotionGroup className={classes.info} stagger={0.07}>
             <Reveal grouped>
-              <Text className={classes.eyebrow}>
+              <p className={classes.eyebrow}>
                 <HiOutlineEnvelope aria-hidden="true" /> {copy.contactEyebrow}
-              </Text>
+              </p>
             </Reveal>
             <Reveal grouped>
-              <Title order={2} id="contact-title">
-                {copy.contactTitle}
-              </Title>
+              <h2 id="contact-title">{copy.contactTitle}</h2>
             </Reveal>
             <Reveal grouped>
-              <Text className={classes.description}>{copy.contactDescription}</Text>
+              <p className={classes.description}>{copy.contactDescription}</p>
             </Reveal>
 
             <Reveal grouped>
@@ -39,8 +37,8 @@ const Contact = async ({ content }: { content?: PublishedPortfolioSnapshot }) =>
                   <HiOutlineMapPin aria-hidden="true" />
                 </span>
                 <div>
-                  <Text component="span">Location</Text>
-                  <Text>{profile.location}</Text>
+                  <span>Location</span>
+                  <p>{profile.location}</p>
                 </div>
               </div>
             </Reveal>

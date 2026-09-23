@@ -3,26 +3,12 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Badge,
-  Burger,
-  Button,
-  Card,
-  Drawer,
-  Group,
-  Modal,
-  PasswordInput,
-  Select,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-  Title
-} from '@mantine/core'
-import { useForm } from '@mantine/form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, type Resolver } from 'react-hook-form'
 import {
   HiOutlineAcademicCap,
   HiOutlineArrowTopRightOnSquare,
+  HiOutlineBars3,
   HiOutlineBookOpen,
   HiOutlineBriefcase,
   HiOutlineChartBarSquare,
@@ -38,23 +24,32 @@ import {
   HiOutlineRocketLaunch,
   HiOutlineSparkles,
   HiOutlineUserCircle,
-  HiOutlineWrenchScrewdriver
+  HiOutlineWrenchScrewdriver,
+  HiOutlineXMark
 } from 'react-icons/hi2'
-import {
-  changeAdminPassword,
-  publishDraft,
-  revokeAllAdminSessions,
-  updateContactMessageStatus
-} from '@/actions/admin'
+import { changeAdminPassword, publishDraft, revokeAllAdminSessions, updateContactMessageStatus } from '@/actions/admin'
 import { signOutAdmin } from '@/actions/auth'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Textarea } from '@/components/ui/textarea'
 import type { AdminData } from '@/lib/admin-data'
+import { changePasswordSchema } from '@/schemas/admin'
 import type { AnyAdminActionResult, CmsSection } from '@/types/admin'
+import { z } from 'zod'
 import { AboutForm, ProfileHeroForm, SectionCopyForm, SettingsForm } from './simple-forms'
 import { CrudManager } from './crud-manager'
 import { MediaManager } from './media-manager'
 import { RevisionsPanel } from './revisions-panel'
-import { ResultAlert, useUnsavedWarning } from './form-support'
+import { applyServerErrors, ResultAlert, useUnsavedWarning } from './form-support'
 import classes from './styles.module.css'
+
+type PasswordValues = z.infer<typeof changePasswordSchema>
 
 const navigation: { id: CmsSection; label: string; icon: typeof HiOutlineHome }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: HiOutlineHome },
@@ -78,7 +73,7 @@ const messageStatusOptions = [
   { value: 'NEW', label: 'New' },
   { value: 'READ', label: 'Read' },
   { value: 'ARCHIVED', label: 'Archived' }
-]
+] as const
 
 const Dashboard = ({ data, navigate }: { data: AdminData; navigate: (section: CmsSection) => void }) => {
   const counts = [
@@ -97,56 +92,64 @@ const Dashboard = ({ data, navigate }: { data: AdminData; navigate: (section: Cm
   ].filter(Boolean) as string[]
 
   return (
-    <Stack gap="xl">
+    <div className="flex flex-col gap-8">
       <div>
-        <Title order={1}>Dashboard</Title>
-        <Text c="dimmed">Manage the working draft, preview it, and publish when ready.</Text>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Manage the working draft, preview it, and publish when ready.</p>
       </div>
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {counts.map(([label, count, section]) => (
-          <Card key={label} withBorder radius="md" className={classes.statCard} onClick={() => navigate(section)}>
-            <Text size="sm" c="dimmed">
-              {label}
-            </Text>
-            <Text className={classes.statValue}>{count}</Text>
+          <Card
+            key={label}
+            className={`cursor-pointer gap-0 rounded-md py-4 shadow-none ${classes.statCard}`}
+            onClick={() => navigate(section)}
+          >
+            <CardContent className="px-4">
+              <p className="text-sm text-muted-foreground">{label}</p>
+              <p className={classes.statValue}>{count}</p>
+            </CardContent>
           </Card>
         ))}
-      </SimpleGrid>
-      <SimpleGrid cols={{ base: 1, md: 2 }}>
-        <Card withBorder radius="md">
-          <Group justify="space-between">
-            <Title order={2} size="h4">
-              Publication status
-            </Title>
-            <Badge color={data.state.hasUnpublishedChanges ? 'orange' : 'teal'}>
-              {data.state.hasUnpublishedChanges ? 'Draft changes' : 'Up to date'}
-            </Badge>
-          </Group>
-          <Text mt="md">Live version: {data.state.version || 'Not published'}</Text>
-          <Text size="sm" c="dimmed">
-            Last published: {data.state.publishedAt ? new Date(data.state.publishedAt).toLocaleString() : 'Never'}
-          </Text>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="gap-0 rounded-md py-4 shadow-none">
+          <CardContent className="px-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-semibold">Publication status</h2>
+              <Badge
+                className={
+                  data.state.hasUnpublishedChanges
+                    ? 'bg-orange-100 text-orange-800 hover:bg-orange-100'
+                    : 'bg-teal-100 text-teal-800 hover:bg-teal-100'
+                }
+              >
+                {data.state.hasUnpublishedChanges ? 'Draft changes' : 'Up to date'}
+              </Badge>
+            </div>
+            <p className="mt-4">Live version: {data.state.version || 'Not published'}</p>
+            <p className="text-sm text-muted-foreground">
+              Last published: {data.state.publishedAt ? new Date(data.state.publishedAt).toLocaleString() : 'Never'}
+            </p>
+          </CardContent>
         </Card>
-        <Card withBorder radius="md">
-          <Title order={2} size="h4">
-            Content checks
-          </Title>
-          {missing.length ? (
-            <Stack gap={4} mt="md">
-              {missing.map((item) => (
-                <Text size="sm" key={item}>
-                  • {item}
-                </Text>
-              ))}
-            </Stack>
-          ) : (
-            <Text mt="md" c="teal">
-              All recommended content is configured.
-            </Text>
-          )}
+        <Card className="gap-0 rounded-md py-4 shadow-none">
+          <CardContent className="px-4">
+            <h2 className="text-base font-semibold">Content checks</h2>
+            {missing.length ? (
+              <ul className="mt-4 space-y-1">
+                {missing.map((item) => (
+                  <li key={item} className="text-sm">
+                    • {item}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 text-teal-700">All recommended content is configured.</p>
+            )}
+          </CardContent>
         </Card>
-      </SimpleGrid>
-    </Stack>
+      </div>
+    </div>
   )
 }
 
@@ -156,54 +159,66 @@ const MessagesPanel = ({ data }: { data: AdminData }) => {
   const [pending, startTransition] = useTransition()
 
   return (
-    <Stack className={classes.formCard} gap="lg">
+    <div className={`${classes.formCard} flex flex-col gap-6`}>
       <div>
-        <Title order={2}>Messages</Title>
-        <Text c="dimmed">Contact form submissions from the public site.</Text>
+        <h2 className="text-xl font-bold tracking-tight">Messages</h2>
+        <p className="text-muted-foreground">Contact form submissions from the public site.</p>
       </div>
       <ResultAlert result={result} />
-      {!data.messages.length && <Text c="dimmed">No messages yet.</Text>}
-      <Stack gap="sm">
+      {!data.messages.length ? <p className="text-muted-foreground">No messages yet.</p> : null}
+      <div className="flex flex-col gap-3">
         {data.messages.map((message) => (
-          <Card key={message.id} withBorder radius="md" padding="md">
-            <Group justify="space-between" align="flex-start" wrap="wrap">
+          <Card key={message.id} className="gap-0 rounded-md py-4 shadow-none">
+            <CardContent className="flex flex-wrap items-start justify-between gap-4 px-4">
               <div className={classes.grow}>
-                <Group gap="xs">
-                  <Text fw={700}>{message.subject}</Text>
-                  <Badge color={message.status === 'NEW' ? 'orange' : message.status === 'READ' ? 'blue' : 'gray'}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-bold">{message.subject}</p>
+                  <Badge
+                    className={
+                      message.status === 'NEW'
+                        ? 'bg-orange-100 text-orange-800 hover:bg-orange-100'
+                        : message.status === 'READ'
+                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-100'
+                          : undefined
+                    }
+                    variant={message.status === 'ARCHIVED' ? 'secondary' : 'default'}
+                  >
                     {message.status}
                   </Badge>
-                </Group>
-                <Text size="sm" c="dimmed">
+                </div>
+                <p className="text-sm text-muted-foreground">
                   {message.name} · {message.email} · {new Date(message.createdAt).toLocaleString()}
-                </Text>
-                <Text mt="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                  {message.message}
-                </Text>
+                </p>
+                <p className="mt-3 whitespace-pre-wrap">{message.message}</p>
               </div>
               <Select
-                aria-label={`Status for ${message.subject}`}
-                data={messageStatusOptions}
                 value={message.status}
                 disabled={pending}
-                w={160}
-                onChange={(next) => {
+                onValueChange={(next) => {
                   if (!next || next === message.status) return
                   startTransition(async () => {
-                    const response = await updateContactMessageStatus(
-                      message.id,
-                      next as 'NEW' | 'READ' | 'ARCHIVED'
-                    )
+                    const response = await updateContactMessageStatus(message.id, next as 'NEW' | 'READ' | 'ARCHIVED')
                     setResult(response)
                     if (response.ok) router.refresh()
                   })
                 }}
-              />
-            </Group>
+              >
+                <SelectTrigger className="h-[42px] w-40 rounded-sm" aria-label={`Status for ${message.subject}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {messageStatusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
           </Card>
         ))}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   )
 }
 
@@ -211,80 +226,97 @@ const AccountPanel = () => {
   const router = useRouter()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
   const [pending, startTransition] = useTransition()
-  const form = useForm({
-    mode: 'controlled',
-    initialValues: {
+  const form = useForm<PasswordValues>({
+    resolver: zodResolver(changePasswordSchema) as Resolver<PasswordValues>,
+    defaultValues: {
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     }
   })
-  useUnsavedWarning(form.isDirty())
+  useUnsavedWarning(form.formState.isDirty)
 
   return (
-    <Stack gap="xl">
-      <form
-        className={classes.formCard}
-        onSubmit={form.onSubmit((values) =>
-          startTransition(async () => {
-            const response = await changeAdminPassword(values)
-            setResult(response)
-            if (!response.ok && response.fieldErrors) form.setErrors(response.fieldErrors)
-            if (response.ok) {
-              form.reset()
-              router.refresh()
-            }
-          })
-        )}
-      >
-        <Stack gap="lg">
-          <div>
-            <Title order={2}>Account</Title>
-            <Text c="dimmed">Change your admin password or revoke active sessions.</Text>
+    <div className="flex flex-col gap-8">
+      <Form {...form}>
+        <form
+          className={classes.formCard}
+          onSubmit={form.handleSubmit((values) =>
+            startTransition(async () => {
+              const response = await changeAdminPassword(values)
+              setResult(response)
+              if (!response.ok) applyServerErrors(form, response.fieldErrors)
+              if (response.ok) {
+                form.reset({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                router.refresh()
+              }
+            })
+          )}
+        >
+          <div className="flex flex-col gap-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">Account</h2>
+              <p className="text-muted-foreground">Change your admin password or revoke active sessions.</p>
+            </div>
+            <ResultAlert result={result} />
+            <FormField
+              control={form.control}
+              name="currentPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current password</FormLabel>
+                  <FormControl>
+                    <Input type="password" autoComplete="current-password" required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="newPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New password</FormLabel>
+                  <FormDescription>At least 12 characters</FormDescription>
+                  <FormControl>
+                    <Input type="password" autoComplete="new-password" required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm new password</FormLabel>
+                  <FormControl>
+                    <Input type="password" autoComplete="new-password" required {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {form.formState.isDirty ? <p className="text-sm text-orange-600">Unsaved changes</p> : null}
+              <Button type="submit" loading={pending} disabled={!form.formState.isDirty}>
+                Update password
+              </Button>
+            </div>
           </div>
-          <ResultAlert result={result} />
-          <PasswordInput
-            label="Current password"
-            required
-            autoComplete="current-password"
-            {...form.getInputProps('currentPassword')}
-          />
-          <PasswordInput
-            label="New password"
-            description="At least 12 characters"
-            required
-            autoComplete="new-password"
-            {...form.getInputProps('newPassword')}
-          />
-          <PasswordInput
-            label="Confirm new password"
-            required
-            autoComplete="new-password"
-            {...form.getInputProps('confirmPassword')}
-          />
-          <Group justify="flex-end">
-            {form.isDirty() && (
-              <Text size="sm" c="orange">
-                Unsaved changes
-              </Text>
-            )}
-            <Button type="submit" loading={pending} disabled={!form.isDirty()}>
-              Update password
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-      <Card withBorder radius="md" className={classes.formCard}>
-        <Stack>
-          <Title order={3} size="h4">
-            Sessions
-          </Title>
-          <Text c="dimmed" size="sm">
+        </form>
+      </Form>
+      <Card className={`gap-0 rounded-md py-4 shadow-none ${classes.formCard}`}>
+        <CardContent className="flex flex-col gap-4 px-0 sm:px-0">
+          <h3 className="text-base font-semibold">Sessions</h3>
+          <p className="text-sm text-muted-foreground">
             Sign out every admin session, including this one. You will need to sign in again.
-          </Text>
+          </p>
           <Button
-            color="red"
             variant="light"
+            className="w-fit text-destructive"
             loading={pending}
             onClick={() => {
               if (!window.confirm('Revoke all admin sessions and sign out?')) return
@@ -300,9 +332,9 @@ const AccountPanel = () => {
           >
             Revoke all sessions
           </Button>
-        </Stack>
+        </CardContent>
       </Card>
-    </Stack>
+    </div>
   )
 }
 
@@ -321,7 +353,7 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
     setResult(null)
   }
   const nav = (
-    <Stack gap={4}>
+    <nav className="flex flex-col gap-1">
       {navigation.map((item) => {
         const Icon = item.icon
         return (
@@ -337,7 +369,7 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
           </button>
         )
       })}
-    </Stack>
+    </nav>
   )
 
   const content =
@@ -351,10 +383,10 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
     ) : section === 'about' ? (
       <AboutForm key={`${data.timestamps.copy}-${data.timestamps.settings}`} data={data} />
     ) : section === 'experience' ? (
-      <Stack gap="xl">
+      <div className="flex flex-col gap-8">
         <SectionCopyForm key={data.timestamps.copy} data={data} mode="sections" />
         <CrudManager kind="experience" data={data} />
-      </Stack>
+      </div>
     ) : section === 'publications' ? (
       <CrudManager kind="publication" data={data} />
     ) : section === 'capabilities' ? (
@@ -392,35 +424,38 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
         {nav}
       </aside>
       <header className={classes.adminHeader}>
-        <Burger
-          hiddenFrom="md"
-          opened={drawerOpened}
-          onClick={() => setDrawerOpened((opened) => !opened)}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={classes.menuButton}
           aria-label="Open admin navigation"
-        />
-        <Group gap="sm" ml="auto">
-          <Badge color={data.state.hasUnpublishedChanges ? 'orange' : 'teal'} variant="light">
+          onClick={() => setDrawerOpened((opened) => !opened)}
+        >
+          {drawerOpened ? <HiOutlineXMark /> : <HiOutlineBars3 />}
+        </Button>
+        <div className={classes.adminHeaderActions}>
+          <Badge
+            className={`${classes.adminHeaderBadge} ${
+              data.state.hasUnpublishedChanges
+                ? 'bg-orange-100 text-orange-800 hover:bg-orange-100'
+                : 'bg-teal-100 text-teal-800 hover:bg-teal-100'
+            }`}
+          >
             {data.state.hasUnpublishedChanges ? 'Unpublished changes' : `Live v${data.state.version}`}
           </Badge>
-          <Button
-            component={Link}
-            href="/admin/preview"
-            target="_blank"
-            variant="default"
-            leftSection={<HiOutlineArrowTopRightOnSquare />}
-          >
-            Preview
+          <Button asChild variant="outline">
+            <Link href="/admin/preview" target="_blank">
+              <HiOutlineArrowTopRightOnSquare />
+              Preview
+            </Link>
           </Button>
-          <Button
-            leftSection={<HiOutlineRocketLaunch />}
-            disabled={!data.state.hasUnpublishedChanges}
-            onClick={() => setPublishOpened(true)}
-          >
+          <Button disabled={!data.state.hasUnpublishedChanges} onClick={() => setPublishOpened(true)}>
+            <HiOutlineRocketLaunch />
             Publish
           </Button>
           <Button
             variant="subtle"
-            color="gray"
             onClick={() =>
               startTransition(async () => {
                 await signOutAdmin()
@@ -431,26 +466,41 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
           >
             Sign out
           </Button>
-        </Group>
+        </div>
       </header>
       <main className={classes.adminMain}>{content}</main>
 
-      <Drawer opened={drawerOpened} onClose={() => setDrawerOpened(false)} title="Portfolio CMS" hiddenFrom="md">
-        {nav}
-      </Drawer>
-      <Modal opened={publishOpened} onClose={() => setPublishOpened(false)} title="Publish portfolio">
-        <Stack>
-          <Text>The complete working draft will become public as a new immutable version.</Text>
-          <Textarea
-            label="Revision note"
-            placeholder="What changed? (optional)"
-            maxLength={160}
-            value={note}
-            onChange={(event) => setNote(event.currentTarget.value)}
-          />
-          <ResultAlert result={result} />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setPublishOpened(false)}>
+      <Sheet open={drawerOpened} onOpenChange={setDrawerOpened}>
+        <SheetContent side="left" className="bg-[var(--color-dark)] text-white sm:max-w-xs">
+          <SheetHeader>
+            <SheetTitle className="text-white">Portfolio CMS</SheetTitle>
+          </SheetHeader>
+          <div className="px-2">{nav}</div>
+        </SheetContent>
+      </Sheet>
+      <Dialog open={publishOpened} onOpenChange={setPublishOpened}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Publish portfolio</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <p>The complete working draft will become public as a new immutable version.</p>
+            <div className="grid gap-2">
+              <label htmlFor="publish-note" className="text-sm font-medium">
+                Revision note
+              </label>
+              <Textarea
+                id="publish-note"
+                placeholder="What changed? (optional)"
+                maxLength={160}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+              />
+            </div>
+            <ResultAlert result={result} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPublishOpened(false)}>
               Cancel
             </Button>
             <Button
@@ -469,9 +519,9 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
             >
               Publish now
             </Button>
-          </Group>
-        </Stack>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,5 +1,5 @@
-import { Container, Text, Title } from '@mantine/core'
 import { getPortfolioContent } from '@/data/portfolio'
+import { Container } from '@/components/ui/container'
 import SectionHeader from '@/components/ui/section-header'
 import Reveal from '@/components/ui/reveal'
 import classes from './styles.module.css'
@@ -26,9 +26,9 @@ const ExperienceSection = async ({ content }: { content?: PublishedPortfolioSnap
                 {experience.current && <span className={classes.current}>Current role</span>}
               </div>
               <article className={classes.record}>
-                <Title order={3}>{experience.role}</Title>
-                <Text className={classes.organization}>{experience.organization}</Text>
-                <Text className={classes.summary}>{experience.summary}</Text>
+                <h3>{experience.role}</h3>
+                <p className={classes.organization}>{experience.organization}</p>
+                <p className={classes.summary}>{experience.summary}</p>
                 {experience.highlights.length ? (
                   <ul className={classes.highlights}>
                     {experience.highlights.map((highlight) => (
@@ -37,7 +37,7 @@ const ExperienceSection = async ({ content }: { content?: PublishedPortfolioSnap
                   </ul>
                 ) : null}
               </article>
-              <Text className={classes.location}>{experience.location}</Text>
+              <p className={classes.location}>{experience.location}</p>
             </Reveal>
           ))}
         </ol>
