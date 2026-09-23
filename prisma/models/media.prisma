@@ -1,0 +1,38 @@
+enum MediaSource {
+  LOCAL
+  CLOUDINARY
+}
+
+enum MediaKind {
+  IMAGE
+  PDF
+}
+
+model MediaAsset {
+  id               String      @id @default(uuid())
+  source           MediaSource
+  kind             MediaKind
+  publicId         String?     @unique @map("public_id")
+  secureUrl        String      @map("secure_url")
+  width            Int?
+  height           Int?
+  bytes            Int?
+  format           String?
+  originalFilename String?     @map("original_filename")
+  altText          String?     @map("alt_text")
+  archivedAt       DateTime?   @map("archived_at")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  createdBy        String?     @map("created_by")
+
+  siteHeroImages       SiteSettings[]      @relation("SiteHeroImage")
+  siteAboutImages      SiteSettings[]      @relation("SiteAboutImage")
+  siteLogoImages       SiteSettings[]      @relation("SiteLogoImage")
+  siteOpenGraphImages  SiteSettings[]      @relation("SiteOpenGraphImage")
+  siteCvAssets         SiteSettings[]      @relation("SiteCv")
+  publicationCovers    PublicationDraft[]  @relation("PublicationCover")
+  publicationPdfs      PublicationDraft[]  @relation("PublicationPdf")
+
+  @@index([kind, archivedAt], map: "media_assets_kind_archived_idx")
+  @@map("media_assets")
+}

@@ -43,7 +43,7 @@ const About = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
             </Reveal>
             <Reveal grouped direction="right">
               <Title order={2} id="about-title">
-                Connecting the work.
+                {copy.aboutTitle}
               </Title>
             </Reveal>
             <Reveal grouped direction="right">

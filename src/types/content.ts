@@ -1,7 +1,7 @@
 export type SocialLink = {
   label: string
   href: string
-  kind: 'linkedin' | 'scholar'
+  kind: 'linkedin' | 'scholar' | 'github' | 'orcid' | 'researchgate' | 'x' | 'email' | 'website'
 }
 
 export type Profile = {
@@ -17,6 +17,7 @@ export type Profile = {
 export type Experience = {
   id: string
   organization: string
+  organizationUrl?: string
   role: string
   location: string
   startDate: string
@@ -33,24 +34,35 @@ export type Education = {
   degree: string
   location: string
   startYear: number
-  endYear: number
-  detail: string
+  endYear?: number | null
+  detail?: string
+}
+
+export type PublicationAuthor = {
+  name: string
+  isSelf?: boolean
 }
 
 export type Publication = {
   id: string
+  slug?: string
   title: string
   year: number
-  authors?: string[]
+  month?: number | null
+  authors?: Array<string | PublicationAuthor>
   venue?: string
   pages?: string
   doi?: string
   type: string
+  status?: string
   paperUrl?: string
-  scholarUrl: string
+  scholarUrl?: string
   abstract?: string
+  bibtex?: string
   topics: string[]
   featured: boolean
+  coverImageId?: string | null
+  pdfAssetId?: string | null
 }
 
 export type CapabilityGroup = {
@@ -58,4 +70,12 @@ export type CapabilityGroup = {
   title: string
   description: string
   items: string[]
+}
+
+export type LearningItem = {
+  id: string
+  title: string
+  issuer: string
+  year?: number | null
+  credentialUrl?: string
 }

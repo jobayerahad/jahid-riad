@@ -23,13 +23,13 @@ The public homepage now follows:
 5. Contact
 6. Footer
 
-The hero removes credentials, statistics, academic summaries, and publication counts. Known legacy/default CMS copy is shortened by `src/lib/portfolio-presentation.ts`; custom CMS-authored copy remains authoritative. Its two calls to action lead directly to work and research.
+The hero removes credentials, statistics, academic summaries, and publication counts. CMS-authored hero and about copy is authoritative (no hardcoded presentation overrides). Its two calls to action lead directly to work and research.
 
-Selected work uses three concise themes derived from enabled experience, capability, and featured publication records. Each item has one category line, a title, one short sentence, and a link. It does not add employers, metrics, projects, or outcomes. The full experience, education, capabilities, and professional learning record remains available on `/profile`.
+Selected work uses CMS `workStories` (with a seeded default set). Each item has one category line, a title, one short sentence, and a link. It does not add employers, metrics, projects, or outcomes. The full experience, education, capabilities, and professional learning record remains available on `/profile`.
 
-Selected research shows at most three featured papers with year, venue, title, a short context line, and a link. Dense author lists and abstracts stay on `/publications`, where the existing URLs, metadata, and JSON-LD remain intact.
+Selected research shows at most three featured papers with year, venue, title, a short context line, and a link. Dense author lists and abstracts stay on `/publications`, including detail pages with BibTeX, DOI, and JSON-LD.
 
-The navigation is limited to Work, Research, About, and Contact. All three repository photographs have distinct roles: the conference image is the professional hero, the Washington winter image gives About a personal and environmental moment, and the formal studio portrait acts as a restrained sign-off beside Contact. Each uses its own responsive crop and focal position.
+The navigation includes Profile and Publications plus Work, Research, About, and Contact.
 
 The interface uses Heroicons for functional actions, section cues, metadata, location, and contact controls; LinkedIn retains its recognizable brand mark. Social links combine a compact icon container with a visible label. A restrained radius scale applies 20px image corners, 16px major surfaces, 10px controls, and 8px small icon controls.
 

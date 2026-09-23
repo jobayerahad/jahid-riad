@@ -1,0 +1,154 @@
+enum SocialPlatform {
+  LINKEDIN
+  SCHOLAR
+  GITHUB
+  ORCID
+  RESEARCHGATE
+  X
+  EMAIL
+  WEBSITE
+}
+
+enum SiteSection {
+  ABOUT
+  EXPERIENCE
+  PUBLICATIONS
+  CAPABILITIES
+  EDUCATION
+  LEARNING
+  CONTACT
+  WORK
+}
+
+model ProfileDraft {
+  id                 String   @id @default("primary")
+  name               String
+  shortName          String   @map("short_name")
+  role               String
+  positioning        String
+  summary            String
+  location           String
+  aboutImageAlt      String?  @map("about_image_alt")
+  aboutCaptionLabel  String?  @map("about_caption_label")
+  contactPanelTitle  String?  @map("contact_panel_title")
+  contactPrivacyCopy String?  @map("contact_privacy_copy")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  updatedBy          String?  @map("updated_by")
+
+  @@map("profile_drafts")
+}
+
+model HeroCopyDraft {
+  id                 String   @id @default("primary")
+  heading            String
+  accent             String
+  introduction       String
+  primaryLabel       String   @map("primary_label")
+  primaryHref        String   @map("primary_href")
+  secondaryLabel     String   @map("secondary_label")
+  secondaryHref      String   @map("secondary_href")
+  focusLabel         String   @map("focus_label")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  updatedBy          String?  @map("updated_by")
+
+  @@map("hero_copy_drafts")
+}
+
+model SectionCopyDraft {
+  section     SiteSection @id
+  eyebrow     String
+  title       String
+  description String
+  actionLabel String?     @map("action_label")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  updatedBy   String?     @map("updated_by")
+
+  @@map("section_copy_drafts")
+}
+
+model AboutPrincipleDraft {
+  id        String   @id @default(uuid())
+  title     String
+  text      String
+  sortOrder Int      @default(0) @map("sort_order")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by")
+
+  @@index([sortOrder], map: "about_principle_drafts_sort_order_idx")
+  @@map("about_principle_drafts")
+}
+
+model SocialLinkDraft {
+  id        String         @id @default(uuid())
+  label     String
+  href      String
+  kind      SocialPlatform
+  sortOrder Int            @default(0) @map("sort_order")
+  enabled   Boolean        @default(true)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  updatedBy String?        @map("updated_by")
+
+  @@index([sortOrder], map: "social_link_drafts_sort_order_idx")
+  @@map("social_link_drafts")
+}
+
+model WorkStoryDraft {
+  id          String   @id @default(uuid())
+  title       String
+  body        String
+  evidence    String
+  href        String
+  linkLabel   String   @map("link_label")
+  visualLabel String   @map("visual_label")
+  sortOrder   Int      @default(0) @map("sort_order")
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   String?  @map("updated_by")
+
+  @@index([sortOrder], map: "work_story_drafts_sort_order_idx")
+  @@map("work_story_drafts")
+}
+
+model LearningDraft {
+  id            String   @id @default(uuid())
+  title         String
+  issuer        String
+  year          Int?
+  credentialUrl String?  @map("credential_url")
+  sortOrder     Int      @default(0) @map("sort_order")
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  updatedBy     String?  @map("updated_by")
+
+  @@index([sortOrder], map: "learning_drafts_sort_order_idx")
+  @@map("learning_drafts")
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+model ContactMessage {
+  id             String               @id @default(uuid())
+  name           String
+  email          String
+  subject        String
+  message        String
+  status         ContactMessageStatus @default(NEW)
+  emailDelivered Boolean              @default(false) @map("email_delivered")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  @@index([status, createdAt], map: "contact_messages_status_created_idx")
+  @@map("contact_messages")
+}

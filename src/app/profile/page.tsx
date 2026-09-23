@@ -37,7 +37,7 @@ const ProfilePage = async () => {
         <Experience content={content} />
         <Education content={content} />
         <Skills content={content} />
-        <Learning />
+        <Learning content={content} />
       </main>
       <Footer content={content} />
     </>

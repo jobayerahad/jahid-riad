@@ -2,15 +2,18 @@ import type { Metadata } from 'next'
 import { Container, Text, Title } from '@mantine/core'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
-import PublicationCard from '@/components/publication-card'
+import PublicationFilters from '@/components/publications/filters'
 import { getPortfolioContent } from '@/data/portfolio'
+import { normalizeAuthors } from '@/lib/bibtex'
 import classes from './styles.module.css'
 
-export const metadata: Metadata = {
-  title: 'Publications',
-  description:
-    'Research publications by Md. Jahid Alam Riad across applied AI, NLP, language models, and medical imaging.',
-  alternates: { canonical: '/publications' }
+export const generateMetadata = async (): Promise<Metadata> => {
+  const content = await getPortfolioContent()
+  return {
+    title: 'Publications',
+    description: content.copy.publicationsDescription,
+    alternates: { canonical: '/publications' }
+  }
 }
 
 const createScholarlyArticles = (
@@ -19,41 +22,35 @@ const createScholarlyArticles = (
 ) =>
   publications.map((publication) => ({
     '@type': 'ScholarlyArticle',
-    '@id': `${siteUrl}/publications#${publication.id}`,
+    '@id': `${siteUrl}/publications/${publication.slug}`,
     headline: publication.title,
     datePublished: String(publication.year),
-    author: publication.authors?.map((name) => ({ '@type': 'Person', name })),
+    author: normalizeAuthors(publication.authors).map((author) => ({ '@type': 'Person', name: author.name })),
     isPartOf: publication.venue ? { '@type': 'PublicationIssue', name: publication.venue } : undefined,
-    pagination: publication.pages,
-    sameAs: publication.paperUrl,
+    pagination: publication.pages || undefined,
+    sameAs: publication.paperUrl || undefined,
     identifier: publication.doi ? `https://doi.org/${publication.doi}` : undefined,
-    keywords: publication.topics.join(', '),
-    publisher: publication.type.toLowerCase().includes('ieee') ? { '@type': 'Organization', name: 'IEEE' } : undefined
+    keywords: publication.topics.join(', ')
   }))
-
-const createJsonLd = (
-  scholarlyArticles: ReturnType<typeof createScholarlyArticles>,
-  siteUrl: string,
-  name: string
-) => ({
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'CollectionPage',
-      '@id': `${siteUrl}/publications#page`,
-      url: `${siteUrl}/publications`,
-      name: `Publications by ${name}`,
-      mainEntity: scholarlyArticles.map((article) => ({ '@id': article['@id'] }))
-    },
-    ...scholarlyArticles
-  ]
-})
 
 const PublicationsPage = async () => {
   const content = await getPortfolioContent()
   const publications = content.publications.filter((publication) => publication.enabled)
-  const scholarlyArticles = createScholarlyArticles(publications, content.settings.siteUrl)
-  const jsonLd = createJsonLd(scholarlyArticles, content.settings.siteUrl, content.profile.name)
+  const siteUrl = content.settings.siteUrl.replace(/\/$/, '')
+  const scholarlyArticles = createScholarlyArticles(publications, siteUrl)
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        '@id': `${siteUrl}/publications#page`,
+        url: `${siteUrl}/publications`,
+        name: `Publications by ${content.profile.name}`,
+        mainEntity: scholarlyArticles.map((article) => ({ '@id': article['@id'] }))
+      },
+      ...scholarlyArticles
+    ]
+  }
 
   return (
     <>
@@ -68,21 +65,15 @@ const PublicationsPage = async () => {
       <main id="main-content">
         <header className={classes.hero}>
           <Container size="xl">
-            <Text className={classes.eyebrow}>Research index</Text>
-            <Title order={1}>Publications</Title>
-            <Text className={classes.intro}>
-              A consolidated list of currently documented research, with the available author, venue, and DOI details.
-            </Text>
+            <Text className={classes.eyebrow}>{content.copy.publicationsEyebrow}</Text>
+            <Title order={1}>{content.copy.publicationsTitle}</Title>
+            <Text className={classes.intro}>{content.copy.publicationsDescription}</Text>
           </Container>
         </header>
 
         <section className={`section ${classes.listSection}`} aria-label="Publication list">
           <Container size="xl">
-            <div className={classes.list}>
-              {publications.map((publication) => (
-                <PublicationCard publication={publication} headingOrder={2} key={publication.id} />
-              ))}
-            </div>
+            <PublicationFilters publications={publications} />
           </Container>
         </section>
       </main>

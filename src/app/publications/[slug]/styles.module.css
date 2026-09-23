@@ -1,0 +1,75 @@
+.article {
+  padding: clamp(5rem, 12vw, 7rem) 0 clamp(4rem, 8vw, 5rem);
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.back:hover,
+.back:focus-visible {
+  color: var(--color-primary);
+}
+.meta {
+  margin: 0 0 0.75rem;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.article h1 {
+  max-width: 28ch;
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.authors {
+  margin: 1rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.venue {
+  margin: 0.5rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+.abstract {
+  max-width: 68ch;
+  margin: 1.5rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+.topics {
+  margin: 1.25rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.35rem;
+  margin-top: 1.5rem;
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+.links a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}

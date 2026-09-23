@@ -10,7 +10,6 @@ import {
   SimpleGrid,
   Stack,
   Switch,
-  TagsInput,
   Text,
   Textarea,
   TextInput,
@@ -33,26 +32,37 @@ const mediaOptions = (data: AdminData, kind: 'IMAGE' | 'PDF' = 'IMAGE') =>
     .filter((asset) => asset.kind === kind)
     .map((asset) => ({ value: asset.id, label: asset.originalFilename || asset.publicId || asset.secureUrl }))
 
+const platformOptions = [
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'scholar', label: 'Google Scholar' },
+  { value: 'github', label: 'GitHub' },
+  { value: 'orcid', label: 'ORCID' },
+  { value: 'researchgate', label: 'ResearchGate' },
+  { value: 'x', label: 'X' },
+  { value: 'email', label: 'Email' },
+  { value: 'website', label: 'Website' }
+]
+
 export const ProfileHeroForm = ({ data }: CommonProps) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
-  const { profile, copy, settings } = data.draft
+  const { profile, hero, copy, settings } = data.draft
   const form = useForm({
     mode: 'controlled',
     initialValues: {
       ...profile,
-      heroHeading: copy.heroHeading,
-      heroAccent: copy.heroAccent,
-      heroIntroduction: copy.heroIntroduction,
-      heroPrimaryLabel: copy.heroPrimaryLabel,
-      heroPrimaryHref: copy.heroPrimaryHref,
-      heroSecondaryLabel: copy.heroSecondaryLabel,
-      heroSecondaryHref: copy.heroSecondaryHref,
-      heroFocusLabel: copy.heroFocusLabel,
+      heading: hero?.heading ?? copy.heroHeading,
+      accent: hero?.accent ?? copy.heroAccent,
+      introduction: hero?.introduction ?? copy.heroIntroduction,
+      primaryLabel: hero?.primaryLabel ?? copy.heroPrimaryLabel,
+      primaryHref: hero?.primaryHref ?? copy.heroPrimaryHref,
+      secondaryLabel: hero?.secondaryLabel ?? copy.heroSecondaryLabel,
+      secondaryHref: hero?.secondaryHref ?? copy.heroSecondaryHref,
+      focusLabel: hero?.focusLabel ?? copy.heroFocusLabel,
       heroImageId: settings.heroImageId ?? null,
       expectedUpdatedAt: data.timestamps.profile,
-      expectedCopyUpdatedAt: data.timestamps.copy,
+      expectedHeroUpdatedAt: data.timestamps.hero,
       expectedSettingsUpdatedAt: data.timestamps.settings
     }
   })
@@ -85,40 +95,20 @@ export const ProfileHeroForm = ({ data }: CommonProps) => {
           <TextInput label="Current role" required maxLength={120} {...form.getInputProps('role')} />
           <TextInput label="Location" required maxLength={160} {...form.getInputProps('location')} />
         </SimpleGrid>
-        <TextInput
-          label="Positioning line"
-          description="Short specialties shown above the hero heading."
-          required
-          maxLength={180}
-          {...form.getInputProps('positioning')}
-        />
-        <Textarea
-          label="Professional summary"
-          description={`${form.values.summary.length}/1200 characters`}
-          required
-          minRows={3}
-          maxLength={1200}
-          {...form.getInputProps('summary')}
-        />
+        <TextInput label="Positioning line" required maxLength={180} {...form.getInputProps('positioning')} />
+        <Textarea label="Professional summary" required minRows={3} maxLength={1200} {...form.getInputProps('summary')} />
         <Divider label="Hero copy" labelPosition="left" />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Heading" required maxLength={180} {...form.getInputProps('heroHeading')} />
-          <TextInput label="Accent text" required maxLength={100} {...form.getInputProps('heroAccent')} />
+          <TextInput label="Heading" required {...form.getInputProps('heading')} />
+          <TextInput label="Accent text" required {...form.getInputProps('accent')} />
         </SimpleGrid>
-        <Textarea
-          label="Introduction"
-          description={`Use {name} and {role} placeholders if useful. ${form.values.heroIntroduction.length}/600 characters`}
-          required
-          minRows={3}
-          maxLength={600}
-          {...form.getInputProps('heroIntroduction')}
-        />
+        <Textarea label="Introduction" required minRows={3} {...form.getInputProps('introduction')} />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Primary button label" required {...form.getInputProps('heroPrimaryLabel')} />
-          <TextInput label="Primary button target" required {...form.getInputProps('heroPrimaryHref')} />
-          <TextInput label="Secondary button label" required {...form.getInputProps('heroSecondaryLabel')} />
-          <TextInput label="Secondary button target" required {...form.getInputProps('heroSecondaryHref')} />
-          <TextInput label="Photo caption label" required {...form.getInputProps('heroFocusLabel')} />
+          <TextInput label="Primary button label" required {...form.getInputProps('primaryLabel')} />
+          <TextInput label="Primary button target" required {...form.getInputProps('primaryHref')} />
+          <TextInput label="Secondary button label" required {...form.getInputProps('secondaryLabel')} />
+          <TextInput label="Secondary button target" required {...form.getInputProps('secondaryHref')} />
+          <TextInput label="Focus label" required {...form.getInputProps('focusLabel')} />
           <Select
             label="Hero portrait"
             searchable
@@ -130,24 +120,16 @@ export const ProfileHeroForm = ({ data }: CommonProps) => {
         <Divider label="Professional links" labelPosition="left" />
         {form.values.socialLinks.map((link, index) => (
           <SimpleGrid key={link.id ?? index} cols={{ base: 1, sm: 4 }} className={classes.repeaterCard}>
-            <Select
-              label="Platform"
-              data={[
-                { value: 'linkedin', label: 'LinkedIn' },
-                { value: 'scholar', label: 'Google Scholar' }
-              ]}
-              {...form.getInputProps(`socialLinks.${index}.kind`)}
-            />
+            <Select label="Platform" data={platformOptions} {...form.getInputProps(`socialLinks.${index}.kind`)} />
             <TextInput label="Label" {...form.getInputProps(`socialLinks.${index}.label`)} />
             <TextInput label="URL" {...form.getInputProps(`socialLinks.${index}.href`)} />
-            <Group align="end">
+            <Group align="flex-end">
               <Switch label="Visible" {...form.getInputProps(`socialLinks.${index}.enabled`, { type: 'checkbox' })} />
               <Button
-                type="button"
                 variant="subtle"
                 color="red"
-                onClick={() => form.removeListItem('socialLinks', index)}
                 leftSection={<HiOutlineTrash />}
+                onClick={() => form.removeListItem('socialLinks', index)}
               >
                 Remove
               </Button>
@@ -155,9 +137,7 @@ export const ProfileHeroForm = ({ data }: CommonProps) => {
           </SimpleGrid>
         ))}
         <Button
-          type="button"
           variant="light"
-          className={classes.addRow}
           leftSection={<HiOutlinePlus />}
           onClick={() => form.insertListItem('socialLinks', { label: '', href: '', kind: 'linkedin', enabled: true })}
         >
@@ -173,6 +153,14 @@ export const AboutForm = ({ data }: CommonProps) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
+  const principles = data.draft.principles.length
+    ? data.draft.principles
+    : data.draft.copy.principles.map((item, index) => ({
+        id: item.id ?? `principle-${index + 1}`,
+        title: item.title,
+        text: item.text,
+        enabled: item.enabled
+      }))
   const form = useForm({
     mode: 'controlled',
     initialValues: {
@@ -181,16 +169,14 @@ export const AboutForm = ({ data }: CommonProps) => {
       aboutBody: data.draft.copy.aboutBody,
       aboutImageAlt: data.draft.copy.aboutImageAlt,
       aboutCaptionLabel: data.draft.copy.aboutCaptionLabel,
-      principleOneTitle: data.draft.copy.principleOneTitle,
-      principleOneText: data.draft.copy.principleOneText,
-      principleTwoTitle: data.draft.copy.principleTwoTitle,
-      principleTwoText: data.draft.copy.principleTwoText,
+      principles,
       aboutImageId: data.draft.settings.aboutImageId ?? null,
       expectedUpdatedAt: data.timestamps.copy,
       expectedSettingsUpdatedAt: data.timestamps.settings
     }
   })
   useUnsavedWarning(form.isDirty())
+
   return (
     <form
       className={classes.formCard}
@@ -216,14 +202,7 @@ export const AboutForm = ({ data }: CommonProps) => {
           <TextInput label="Eyebrow" required {...form.getInputProps('aboutEyebrow')} />
           <TextInput label="Heading" required {...form.getInputProps('aboutTitle')} />
         </SimpleGrid>
-        <Textarea
-          label="About body"
-          description={`${form.values.aboutBody.length}/1600 characters`}
-          required
-          minRows={5}
-          maxLength={1600}
-          {...form.getInputProps('aboutBody')}
-        />
+        <Textarea label="About body" required minRows={5} maxLength={1600} {...form.getInputProps('aboutBody')} />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <Select
             label="About image"
@@ -236,16 +215,28 @@ export const AboutForm = ({ data }: CommonProps) => {
           <TextInput label="Image caption label" required {...form.getInputProps('aboutCaptionLabel')} />
         </SimpleGrid>
         <Divider label="Principles" labelPosition="left" />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <Stack>
-            <TextInput label="First principle" required {...form.getInputProps('principleOneTitle')} />
-            <Textarea label="Explanation" minRows={3} {...form.getInputProps('principleOneText')} />
-          </Stack>
-          <Stack>
-            <TextInput label="Second principle" required {...form.getInputProps('principleTwoTitle')} />
-            <Textarea label="Explanation" minRows={3} {...form.getInputProps('principleTwoText')} />
-          </Stack>
-        </SimpleGrid>
+        {form.values.principles.map((item, index) => (
+          <SimpleGrid key={item.id ?? index} cols={{ base: 1, sm: 2 }} className={classes.repeaterCard}>
+            <TextInput label="Title" required {...form.getInputProps(`principles.${index}.title`)} />
+            <Textarea label="Explanation" required minRows={2} {...form.getInputProps(`principles.${index}.text`)} />
+            <Switch label="Visible" {...form.getInputProps(`principles.${index}.enabled`, { type: 'checkbox' })} />
+            <Button
+              variant="subtle"
+              color="red"
+              leftSection={<HiOutlineTrash />}
+              onClick={() => form.removeListItem('principles', index)}
+            >
+              Remove
+            </Button>
+          </SimpleGrid>
+        ))}
+        <Button
+          variant="light"
+          leftSection={<HiOutlinePlus />}
+          onClick={() => form.insertListItem('principles', { id: crypto.randomUUID(), title: '', text: '', enabled: true })}
+        >
+          Add principle
+        </Button>
         <FormFooter pending={pending} dirty={form.isDirty()} />
       </Stack>
     </form>
@@ -258,21 +249,53 @@ export const SectionCopyForm = ({ data, mode }: CommonProps & { mode: CopyMode }
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
-  const copy = data.draft.copy
-  const form = useForm({ mode: 'controlled', initialValues: { ...copy, expectedUpdatedAt: data.timestamps.copy } })
+  const sectionKeys =
+    mode === 'contact'
+      ? (['CONTACT'] as const)
+      : (['EXPERIENCE', 'PUBLICATIONS', 'CAPABILITIES', 'EDUCATION', 'LEARNING', 'WORK'] as const)
+
+  const sections = sectionKeys.map((section) => {
+    const existing = data.draft.sections.find((item) => item.section === section)
+    return {
+      section,
+      eyebrow: existing?.eyebrow ?? '',
+      title: existing?.title ?? '',
+      description: existing?.description ?? '',
+      actionLabel: existing?.actionLabel ?? ''
+    }
+  })
+
+  const form = useForm({
+    mode: 'controlled',
+    initialValues: {
+      sections,
+      contactPanelTitle: data.draft.copy.contactPanelTitle,
+      contactPrivacyCopy: data.draft.copy.contactPrivacyCopy,
+      expectedUpdatedAt: data.timestamps.copy
+    }
+  })
   useUnsavedWarning(form.isDirty())
-  const headerFields = [
-    ['experience', 'Experience'],
-    ['publications', 'Publications'],
-    ['capabilities', 'Capabilities'],
-    ['education', 'Education']
-  ] as const
+
   return (
     <form
       className={classes.formCard}
       onSubmit={form.onSubmit((values) =>
         startTransition(async () => {
-          const response = await saveSectionCopy(values)
+          const known = new Set(sectionKeys as readonly string[])
+          const mergedSections =
+            mode === 'contact'
+              ? [
+                  ...data.draft.sections.filter((item) => item.section !== 'CONTACT'),
+                  ...values.sections
+                ]
+              : [
+                  ...data.draft.sections.filter((item) => !known.has(item.section)),
+                  ...values.sections
+                ]
+          const response = await saveSectionCopy({
+            ...values,
+            sections: mergedSections
+          })
           setResult(response)
           if (!response.ok) form.setErrors(errorsFrom(response))
           else {
@@ -284,37 +307,31 @@ export const SectionCopyForm = ({ data, mode }: CommonProps & { mode: CopyMode }
     >
       <Stack gap="lg">
         <div>
-          <Title order={2}>{mode === 'contact' ? 'Contact copy' : 'Section headings'}</Title>
-          <Text c="dimmed">Edit visitor-facing labels and explanations.</Text>
+          <Title order={2}>{mode === 'contact' ? 'Contact copy' : 'Section copy'}</Title>
+          <Text c="dimmed">
+            {mode === 'contact' ? 'Contact section labels and privacy notice.' : 'Headings and descriptions for major sections.'}
+          </Text>
         </div>
         <ResultAlert result={result} />
-        {mode === 'sections' ? (
-          headerFields.map(([prefix, label]) => (
-            <Stack key={prefix} className={classes.repeaterCard}>
-              <Title order={3} size="h4">
-                {label}
-              </Title>
-              <SimpleGrid cols={{ base: 1, sm: 2 }}>
-                <TextInput label="Eyebrow" {...form.getInputProps(`${prefix}Eyebrow`)} />
-                <TextInput label="Heading" {...form.getInputProps(`${prefix}Title`)} />
-              </SimpleGrid>
-              <Textarea label="Description" minRows={2} {...form.getInputProps(`${prefix}Description`)} />
-              {prefix === 'publications' && (
-                <TextInput label="View-all button label" {...form.getInputProps('publicationsActionLabel')} />
-              )}
-            </Stack>
-          ))
-        ) : (
-          <Stack>
+        {form.values.sections.map((section, index) => (
+          <Stack key={section.section} className={classes.repeaterCard} gap="sm">
+            <Text fw={700}>{section.section}</Text>
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              <TextInput label="Eyebrow" {...form.getInputProps('contactEyebrow')} />
-              <TextInput label="Heading" {...form.getInputProps('contactTitle')} />
-              <TextInput label="Information panel heading" {...form.getInputProps('contactPanelTitle')} />
+              <TextInput label="Eyebrow" required {...form.getInputProps(`sections.${index}.eyebrow`)} />
+              <TextInput label="Title" required {...form.getInputProps(`sections.${index}.title`)} />
             </SimpleGrid>
-            <Textarea label="Section description" minRows={3} {...form.getInputProps('contactDescription')} />
-            <Textarea label="Privacy and response copy" minRows={4} {...form.getInputProps('contactPrivacyCopy')} />
+            <Textarea label="Description" required minRows={2} {...form.getInputProps(`sections.${index}.description`)} />
+            {section.section === 'PUBLICATIONS' || section.section === 'CONTACT' ? (
+              <TextInput label="Action label" {...form.getInputProps(`sections.${index}.actionLabel`)} />
+            ) : null}
           </Stack>
-        )}
+        ))}
+        {mode === 'contact' ? (
+          <>
+            <TextInput label="Panel title" required {...form.getInputProps('contactPanelTitle')} />
+            <Textarea label="Privacy copy" required minRows={3} {...form.getInputProps('contactPrivacyCopy')} />
+          </>
+        ) : null}
         <FormFooter pending={pending} dirty={form.isDirty()} />
       </Stack>
     </form>
@@ -325,11 +342,20 @@ export const SettingsForm = ({ data }: CommonProps) => {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<AnyAdminActionResult | null>(null)
+  const { settings } = data.draft
   const form = useForm({
     mode: 'controlled',
-    initialValues: { ...data.draft.settings, expectedUpdatedAt: data.timestamps.settings }
+    initialValues: {
+      ...settings,
+      keywords: settings.keywords,
+      logoImageId: settings.logoImageId ?? null,
+      openGraphImageId: settings.openGraphImageId ?? null,
+      cvAssetId: settings.cvAssetId ?? null,
+      expectedUpdatedAt: data.timestamps.settings
+    }
   })
   useUnsavedWarning(form.isDirty())
+
   return (
     <form
       className={classes.formCard}
@@ -347,51 +373,47 @@ export const SettingsForm = ({ data }: CommonProps) => {
     >
       <Stack gap="lg">
         <div>
-          <Title order={2}>SEO & Site settings</Title>
-          <Text c="dimmed">Search previews, social previews, logo, CV, and canonical identity.</Text>
+          <Title order={2}>SEO & Settings</Title>
+          <Text c="dimmed">Site metadata, social cards, logo, and CV.</Text>
         </div>
         <ResultAlert result={result} />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <TextInput label="Site name" required {...form.getInputProps('siteName')} />
-          <TextInput label="Canonical site URL" required {...form.getInputProps('siteUrl')} />
-          <TextInput label="Default page title" required {...form.getInputProps('defaultTitle')} />
-          <TextInput
-            label="Title template"
-            description="Use %s for the page title."
-            required
-            {...form.getInputProps('titleTemplate')}
-          />
+          <TextInput label="Site URL" required {...form.getInputProps('siteUrl')} />
+          <TextInput label="Default title" required {...form.getInputProps('defaultTitle')} />
+          <TextInput label="Title template" required {...form.getInputProps('titleTemplate')} />
         </SimpleGrid>
-        <Textarea
-          label="Search description"
-          description={`${form.values.metaDescription.length}/320 characters`}
-          minRows={3}
-          maxLength={320}
-          required
-          {...form.getInputProps('metaDescription')}
+        <Textarea label="Meta description" required minRows={3} {...form.getInputProps('metaDescription')} />
+        <TextInput
+          label="Keywords"
+          description="Comma-separated"
+          value={form.values.keywords.join(', ')}
+          onChange={(event) =>
+            form.setFieldValue(
+              'keywords',
+              event.currentTarget.value
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean)
+            )
+          }
         />
-        <TagsInput label="Search keywords" splitChars={[',']} {...form.getInputProps('keywords')} />
-        <Divider label="Social previews" labelPosition="left" />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <TextInput label="Open Graph title" {...form.getInputProps('openGraphTitle')} />
-          <TextInput label="Twitter title" {...form.getInputProps('twitterTitle')} />
-          <Textarea label="Open Graph description" minRows={3} {...form.getInputProps('openGraphDescription')} />
-          <Textarea label="Twitter description" minRows={3} {...form.getInputProps('twitterDescription')} />
+          <TextInput label="Open Graph title" required {...form.getInputProps('openGraphTitle')} />
+          <TextInput label="Twitter title" required {...form.getInputProps('twitterTitle')} />
+        </SimpleGrid>
+        <Textarea label="Open Graph description" required minRows={2} {...form.getInputProps('openGraphDescription')} />
+        <Textarea label="Twitter description" required minRows={2} {...form.getInputProps('twitterDescription')} />
+        <SimpleGrid cols={{ base: 1, sm: 3 }}>
           <Select label="Logo" searchable clearable data={mediaOptions(data)} {...form.getInputProps('logoImageId')} />
           <Select
-            label="Social preview image"
+            label="Open Graph image"
             searchable
             clearable
             data={mediaOptions(data)}
             {...form.getInputProps('openGraphImageId')}
           />
-          <Select
-            label="Public CV"
-            searchable
-            clearable
-            data={mediaOptions(data, 'PDF')}
-            {...form.getInputProps('cvAssetId')}
-          />
+          <Select label="CV PDF" searchable clearable data={mediaOptions(data, 'PDF')} {...form.getInputProps('cvAssetId')} />
         </SimpleGrid>
         <FormFooter pending={pending} dirty={form.isDirty()} />
       </Stack>

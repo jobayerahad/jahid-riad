@@ -1,0 +1,85 @@
+enum PublicationType {
+  JOURNAL_ARTICLE
+  CONFERENCE_PAPER
+  WORKSHOP_PAPER
+  BOOK_CHAPTER
+  PREPRINT
+  THESIS
+  OTHER
+}
+
+enum PublicationStatus {
+  PUBLISHED
+  ACCEPTED
+  UNDER_REVIEW
+  PREPRINT
+}
+
+model Topic {
+  id           String                   @id @default(uuid())
+  name         String                   @unique
+  slug         String                   @unique
+  createdAt    DateTime                 @default(now()) @map("created_at")
+  updatedAt    DateTime                 @updatedAt @map("updated_at")
+  publications PublicationTopicDraft[]
+
+  @@map("topics")
+}
+
+model PublicationDraft {
+  id           String                   @id @default(uuid())
+  slug         String                   @unique
+  title        String
+  year         Int
+  month        Int?
+  type         PublicationType
+  status       PublicationStatus        @default(PUBLISHED)
+  venue        String?
+  pages        String?
+  doi          String?
+  paperUrl     String?                  @map("paper_url")
+  scholarUrl   String?                  @map("scholar_url")
+  abstract     String?
+  bibtex       String?
+  coverImageId String?                  @map("cover_image_id")
+  coverImage   MediaAsset?              @relation("PublicationCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  pdfAssetId   String?                  @map("pdf_asset_id")
+  pdfAsset     MediaAsset?              @relation("PublicationPdf", fields: [pdfAssetId], references: [id], onDelete: SetNull)
+  featured     Boolean                  @default(false)
+  sortOrder    Int                      @default(0) @map("sort_order")
+  enabled      Boolean                  @default(true)
+  createdAt    DateTime                 @default(now()) @map("created_at")
+  updatedAt    DateTime                 @updatedAt @map("updated_at")
+  updatedBy    String?                  @map("updated_by")
+  authors      PublicationAuthorDraft[]
+  topics       PublicationTopicDraft[]
+
+  @@index([sortOrder], map: "publication_drafts_sort_order_idx")
+  @@index([year], map: "publication_drafts_year_idx")
+  @@map("publication_drafts")
+}
+
+model PublicationAuthorDraft {
+  id            String           @id @default(uuid())
+  publicationId String           @map("publication_id")
+  name          String
+  isSelf        Boolean          @default(false) @map("is_self")
+  sortOrder     Int              @default(0) @map("sort_order")
+  publication   PublicationDraft @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@index([publicationId, sortOrder], map: "publication_authors_parent_sort_idx")
+  @@map("publication_author_drafts")
+}
+
+model PublicationTopicDraft {
+  id            String           @id @default(uuid())
+  publicationId String           @map("publication_id")
+  topicId       String           @map("topic_id")
+  sortOrder     Int              @default(0) @map("sort_order")
+  publication   PublicationDraft @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  topic         Topic            @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, topicId], map: "publication_topics_unique")
+  @@index([publicationId, sortOrder], map: "publication_topics_parent_sort_idx")
+  @@map("publication_topic_drafts")
+}

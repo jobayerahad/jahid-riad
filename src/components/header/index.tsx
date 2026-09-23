@@ -3,10 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Burger, Container, Drawer } from '@mantine/core'
+import { Burger, Container, Drawer, Group } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { HiArrowUpRight } from 'react-icons/hi2'
+import ColorSchemeToggle from '@/components/ui/color-scheme-toggle'
 import classes from './styles.module.css'
+
+const pageLinks = [
+  { href: '/profile', label: 'Profile' },
+  { href: '/publications', label: 'Publications' }
+]
 
 const sectionLinks = [
   { id: 'work', label: 'Work' },
@@ -49,6 +55,19 @@ const Header = () => {
     return () => observer.disconnect()
   }, [isHome])
 
+  const pageItems = pageLinks.map(({ href, label }) => (
+    <Link
+      key={href}
+      href={href}
+      className={classes.link}
+      onClick={close}
+      data-active={pathname === href || pathname.startsWith(`${href}/`) ? true : undefined}
+      aria-current={pathname === href || pathname.startsWith(`${href}/`) ? 'page' : undefined}
+    >
+      {label}
+    </Link>
+  ))
+
   const navItems = sectionLinks.map(({ id, label }) => (
     <Link
       key={id}
@@ -63,6 +82,13 @@ const Header = () => {
     </Link>
   ))
 
+  const allNav = (
+    <>
+      {pageItems}
+      {navItems}
+    </>
+  )
+
   return (
     <header className={classes.header} data-scrolled={scrolled || undefined}>
       <Container size="xl" className={classes.inner}>
@@ -70,18 +96,21 @@ const Header = () => {
           Jahid Riad<span>.</span>
         </Link>
         <nav className={classes.desktopNav} aria-label="Primary navigation">
-          {navItems}
+          {allNav}
         </nav>
-        <Burger
-          className={classes.burger}
-          opened={opened}
-          onClick={toggle}
-          hiddenFrom="md"
-          size="sm"
-          aria-label={opened ? 'Close navigation menu' : 'Open navigation menu'}
-          aria-expanded={opened}
-          aria-controls="mobile-navigation"
-        />
+        <Group gap="xs" wrap="nowrap">
+          <ColorSchemeToggle />
+          <Burger
+            className={classes.burger}
+            opened={opened}
+            onClick={toggle}
+            hiddenFrom="md"
+            size="sm"
+            aria-label={opened ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={opened}
+            aria-controls="mobile-navigation"
+          />
+        </Group>
         <Drawer
           id="mobile-navigation"
           opened={opened}
@@ -95,7 +124,7 @@ const Header = () => {
           classNames={{ title: classes.drawerTitle }}
         >
           <nav className={classes.mobileNav} aria-label="Mobile navigation">
-            {navItems}
+            {allNav}
           </nav>
         </Drawer>
       </Container>

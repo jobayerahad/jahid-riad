@@ -2,9 +2,9 @@ import clsx from 'clsx'
 import type { Metadata } from 'next'
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core'
 import localFont from 'next/font/local'
-import { GoogleAnalytics } from '@next/third-parties/google'
 import '@mantine/core/styles.css'
 import './globals.css'
+import AnalyticsConsent from '@/components/ui/analytics-consent'
 import { theme } from '@/config/theme'
 import { getPortfolioContent } from '@/data/portfolio'
 import type { WrapperProps } from '@/types'
@@ -62,13 +62,15 @@ const RootLayout = ({ children }: WrapperProps) => {
   return (
     <html lang="en" className={clsx(spaceGrotesk.variable, inter.variable)} {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript forceColorScheme="light" />
+        <ColorSchemeScript defaultColorScheme="light" />
       </head>
       <body suppressHydrationWarning>
-        <MantineProvider forceColorScheme="light" theme={theme} classNamesPrefix="jr">
+        <MantineProvider defaultColorScheme="light" theme={theme} classNamesPrefix="jr">
           {children}
+          {process.env.NODE_ENV === 'production' && analyticsId ? (
+            <AnalyticsConsent gaId={analyticsId} />
+          ) : null}
         </MantineProvider>
-        {process.env.NODE_ENV === 'production' && analyticsId ? <GoogleAnalytics gaId={analyticsId} /> : null}
       </body>
     </html>
   )

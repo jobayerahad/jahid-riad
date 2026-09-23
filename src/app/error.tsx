@@ -9,7 +9,7 @@ import classes from './error.module.css'
 type Props = { error: Error & { digest?: string }; reset: () => void }
 
 const Error = ({ reset }: Props) => (
-  <div className={classes.wrapper}>
+  <main className={classes.wrapper}>
     <Container size="sm">
       <Title c="white" mb="lg">
         Something went wrong
@@ -33,7 +33,7 @@ const Error = ({ reset }: Props) => (
         </Button>
       </Group>
     </Container>
-  </div>
+  </main>
 )
 
 export default Error

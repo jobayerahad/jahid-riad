@@ -1,5 +1,5 @@
-import { FaLinkedinIn } from 'react-icons/fa'
-import { HiArrowUpRight, HiOutlineAcademicCap } from 'react-icons/hi2'
+import { FaGithub, FaLinkedinIn, FaOrcid, FaResearchgate, FaXTwitter } from 'react-icons/fa6'
+import { HiArrowUpRight, HiOutlineAcademicCap, HiOutlineEnvelope, HiOutlineGlobeAlt } from 'react-icons/hi2'
 import classes from './social-links.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
@@ -10,15 +10,21 @@ type Props = {
 
 const icons = {
   linkedin: FaLinkedinIn,
-  scholar: HiOutlineAcademicCap
+  scholar: HiOutlineAcademicCap,
+  github: FaGithub,
+  orcid: FaOrcid,
+  researchgate: FaResearchgate,
+  x: FaXTwitter,
+  email: HiOutlineEnvelope,
+  website: HiOutlineGlobeAlt
 }
 
 const SocialLinks = ({ links, variant = 'light' }: Props) => (
-  <div className={classes.links} data-variant={variant} aria-label="Professional profiles">
+  <nav className={classes.links} data-variant={variant} aria-label="Professional profiles">
     {links
       .filter((link) => link.enabled)
       .map((link) => {
-        const Icon = icons[link.kind]
+        const Icon = icons[link.kind] ?? HiOutlineGlobeAlt
 
         return (
           <a
@@ -35,7 +41,7 @@ const SocialLinks = ({ links, variant = 'light' }: Props) => (
           </a>
         )
       })}
-  </div>
+  </nav>
 )
 
 export default SocialLinks

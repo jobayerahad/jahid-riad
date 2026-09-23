@@ -1,0 +1,28 @@
+model SiteSettings {
+  id                   String      @id @default("primary")
+  siteName             String      @map("site_name")
+  siteUrl              String      @map("site_url")
+  defaultTitle         String      @map("default_title")
+  titleTemplate        String      @map("title_template")
+  metaDescription      String      @map("meta_description")
+  keywords             String[]
+  openGraphTitle       String      @map("open_graph_title")
+  openGraphDescription String      @map("open_graph_description")
+  twitterTitle         String      @map("twitter_title")
+  twitterDescription   String      @map("twitter_description")
+  heroImageId          String?     @map("hero_image_id")
+  heroImage            MediaAsset? @relation("SiteHeroImage", fields: [heroImageId], references: [id], onDelete: SetNull)
+  aboutImageId         String?     @map("about_image_id")
+  aboutImage           MediaAsset? @relation("SiteAboutImage", fields: [aboutImageId], references: [id], onDelete: SetNull)
+  logoImageId          String?     @map("logo_image_id")
+  logoImage            MediaAsset? @relation("SiteLogoImage", fields: [logoImageId], references: [id], onDelete: SetNull)
+  openGraphImageId     String?     @map("open_graph_image_id")
+  openGraphImage       MediaAsset? @relation("SiteOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: SetNull)
+  cvAssetId            String?     @map("cv_asset_id")
+  cvAsset              MediaAsset? @relation("SiteCv", fields: [cvAssetId], references: [id], onDelete: SetNull)
+  createdAt            DateTime    @default(now()) @map("created_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
+  updatedBy            String?     @map("updated_by")
+
+  @@map("site_settings")
+}

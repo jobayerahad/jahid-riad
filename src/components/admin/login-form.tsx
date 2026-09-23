@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert, Button, Paper, PasswordInput, Stack, TextInput, Title } from '@mantine/core'
-import { authClient } from '@/lib/auth-client'
+import { signInAdmin } from '@/actions/auth'
 
 const AdminLoginForm = () => {
   const router = useRouter()
@@ -13,14 +13,10 @@ const AdminLoginForm = () => {
   const submit = (formData: FormData) => {
     setError('')
     startTransition(async () => {
-      const response = await authClient.signIn.email({
-        email: String(formData.get('email') ?? ''),
-        password: String(formData.get('password') ?? ''),
-        rememberMe: true
-      })
+      const response = await signInAdmin(formData)
 
-      if (response.error) {
-        setError('The email or password is incorrect.')
+      if (!response.ok) {
+        setError(response.message)
         return
       }
 

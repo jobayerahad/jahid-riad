@@ -10,8 +10,8 @@ const AdminPage = async () => {
     return (
       <Container size="md" py={80}>
         <Alert color="yellow" title="Admin setup required">
-          Configure PostgreSQL, Better Auth, and the administrator environment variables, deploy migrations, then run
-          the seed command documented in the README.
+          Configure PostgreSQL and the administrator environment variables, deploy migrations, then run the seed
+          command documented in the README.
         </Alert>
       </Container>
     )

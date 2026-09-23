@@ -1,0 +1,48 @@
+model ExperienceDraft {
+  id              String                     @id @default(uuid())
+  organization    String
+  organizationUrl String?                    @map("organization_url")
+  role            String
+  location        String
+  startDate       DateTime                   @map("start_date") @db.Date
+  endDate         DateTime?                  @map("end_date") @db.Date
+  summary         String
+  sortOrder       Int                        @default(0) @map("sort_order")
+  enabled         Boolean                    @default(true)
+  createdAt       DateTime                   @default(now()) @map("created_at")
+  updatedAt       DateTime                   @updatedAt @map("updated_at")
+  updatedBy       String?                    @map("updated_by")
+  highlights      ExperienceHighlightDraft[]
+
+  @@index([sortOrder], map: "experience_drafts_sort_order_idx")
+  @@map("experience_drafts")
+}
+
+model ExperienceHighlightDraft {
+  id           String          @id @default(uuid())
+  experienceId String          @map("experience_id")
+  text         String
+  sortOrder    Int             @default(0) @map("sort_order")
+  experience   ExperienceDraft @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId, sortOrder], map: "experience_highlights_parent_sort_idx")
+  @@map("experience_highlight_drafts")
+}
+
+model EducationDraft {
+  id          String   @id @default(uuid())
+  institution String
+  degree      String
+  location    String
+  startYear   Int      @map("start_year")
+  endYear     Int?     @map("end_year")
+  detail      String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   String?  @map("updated_by")
+
+  @@index([sortOrder], map: "education_drafts_sort_order_idx")
+  @@map("education_drafts")
+}

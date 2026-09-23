@@ -1,0 +1,10 @@
+model RateLimitBucket {
+  key       String   @id
+  count     Int      @default(1)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([expiresAt], map: "rate_limit_buckets_expires_at_idx")
+  @@map("rate_limit_buckets")
+}

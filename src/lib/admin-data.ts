@@ -3,14 +3,15 @@ import { prisma } from '@/lib/prisma'
 
 export const getAdminData = async (email: string) => {
   await ensureCmsInitialized(email)
-  const [draft, state, revisions, media, profile, copy, settings] = await Promise.all([
+  const [draft, state, revisions, media, profile, hero, settings, messages] = await Promise.all([
     readDraftSnapshot(),
-    prisma.publicationState.findUnique({ where: { id: 'primary' }, include: { activeRevision: true } }),
+    prisma.publishState.findUnique({ where: { id: 'primary' }, include: { activeRevision: true } }),
     prisma.contentRevision.findMany({ orderBy: { version: 'desc' }, take: 30 }),
     prisma.mediaAsset.findMany({ where: { archivedAt: null }, orderBy: { createdAt: 'desc' } }),
     prisma.profileDraft.findUnique({ where: { id: 'primary' } }),
-    prisma.contentCopyDraft.findUnique({ where: { id: 'primary' } }),
-    prisma.siteSettings.findUnique({ where: { id: 'primary' } })
+    prisma.heroCopyDraft.findUnique({ where: { id: 'primary' } }),
+    prisma.siteSettings.findUnique({ where: { id: 'primary' } }),
+    prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' }, take: 50 })
   ])
 
   return {
@@ -25,6 +26,7 @@ export const getAdminData = async (email: string) => {
     revisions: revisions.map((revision) => ({
       id: revision.id,
       version: revision.version,
+      schemaVersion: revision.schemaVersion,
       note: revision.note,
       publishedAt: revision.publishedAt.toISOString(),
       publishedBy: revision.publishedBy,
@@ -36,7 +38,6 @@ export const getAdminData = async (email: string) => {
       kind: asset.kind,
       publicId: asset.publicId,
       secureUrl: asset.secureUrl,
-      resourceType: asset.resourceType,
       width: asset.width,
       height: asset.height,
       bytes: asset.bytes,
@@ -45,9 +46,20 @@ export const getAdminData = async (email: string) => {
       altText: asset.altText,
       createdAt: asset.createdAt.toISOString()
     })),
+    messages: messages.map((message) => ({
+      id: message.id,
+      name: message.name,
+      email: message.email,
+      subject: message.subject,
+      message: message.message,
+      status: message.status,
+      emailDelivered: message.emailDelivered,
+      createdAt: message.createdAt.toISOString()
+    })),
     timestamps: {
       profile: profile?.updatedAt.toISOString(),
-      copy: copy?.updatedAt.toISOString(),
+      hero: hero?.updatedAt.toISOString(),
+      copy: hero?.updatedAt.toISOString(),
       settings: settings?.updatedAt.toISOString()
     }
   }

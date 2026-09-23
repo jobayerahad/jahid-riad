@@ -16,4 +16,8 @@ export const contactSchema = z.object({
   token: z.string().min(1, 'Bot verification is required').max(4096, 'Bot verification token is invalid')
 })
 
+/** Client-side form validation runs before reCAPTCHA issues a token. */
+export const contactClientSchema = contactSchema.omit({ token: true })
+
 export type ContactInput = z.infer<typeof contactSchema>
+export type ContactClientInput = z.infer<typeof contactClientSchema>

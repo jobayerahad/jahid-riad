@@ -29,9 +29,9 @@ const Publications = async ({ content }: { content?: PublishedPortfolioSnapshot 
               <HiOutlineBeaker aria-hidden="true" /> {copy.publicationsEyebrow}
             </Text>
             <Title order={2} id="research-title">
-              Selected research
+              {copy.publicationsTitle}
             </Title>
-            <Text>Applied AI research across language, culture, and human-centered systems.</Text>
+            <Text>{copy.publicationsDescription}</Text>
             <Link href="/publications" className={classes.indexLink}>
               {copy.publicationsActionLabel} <HiArrowRight aria-hidden="true" />
             </Link>
@@ -39,16 +39,14 @@ const Publications = async ({ content }: { content?: PublishedPortfolioSnapshot 
 
           <MotionGroup className={classes.list} stagger={0.09}>
             {featuredPublications.map((publication, index) => {
-              const destination = publication.paperUrl || publication.scholarUrl
+              const destination = `/publications/${publication.slug}`
               const context = publication.abstract ?? `Research spanning ${publication.topics.join(', ')}.`
               const venue = publication.venue?.replace(new RegExp(`^${publication.year}\\s*`), '')
 
               return (
                 <Reveal as="article" className={classes.item} grouped key={publication.id}>
-                  <a
+                  <Link
                     href={destination}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className={classes.itemLink}
                     aria-label={`View research: ${publication.title}`}
                   >
@@ -65,7 +63,7 @@ const Publications = async ({ content }: { content?: PublishedPortfolioSnapshot 
                       <span>View</span>
                       <HiArrowUpRight aria-hidden="true" />
                     </span>
-                  </a>
+                  </Link>
                 </Reveal>
               )
             })}

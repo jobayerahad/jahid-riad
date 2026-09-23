@@ -11,12 +11,15 @@ import {
   Drawer,
   Group,
   Modal,
+  PasswordInput,
+  Select,
   SimpleGrid,
   Stack,
   Text,
   Textarea,
   Title
 } from '@mantine/core'
+import { useForm } from '@mantine/form'
 import {
   HiOutlineAcademicCap,
   HiOutlineArrowTopRightOnSquare,
@@ -28,20 +31,29 @@ import {
   HiOutlineCog6Tooth,
   HiOutlineDocumentText,
   HiOutlineHome,
+  HiOutlineInbox,
+  HiOutlineLightBulb,
+  HiOutlineLockClosed,
   HiOutlinePhoto,
   HiOutlineRocketLaunch,
+  HiOutlineSparkles,
   HiOutlineUserCircle,
   HiOutlineWrenchScrewdriver
 } from 'react-icons/hi2'
-import { publishDraft } from '@/actions/admin'
-import { authClient } from '@/lib/auth-client'
+import {
+  changeAdminPassword,
+  publishDraft,
+  revokeAllAdminSessions,
+  updateContactMessageStatus
+} from '@/actions/admin'
+import { signOutAdmin } from '@/actions/auth'
 import type { AdminData } from '@/lib/admin-data'
 import type { AnyAdminActionResult, CmsSection } from '@/types/admin'
 import { AboutForm, ProfileHeroForm, SectionCopyForm, SettingsForm } from './simple-forms'
 import { CrudManager } from './crud-manager'
 import { MediaManager } from './media-manager'
 import { RevisionsPanel } from './revisions-panel'
-import { ResultAlert } from './form-support'
+import { ResultAlert, useUnsavedWarning } from './form-support'
 import classes from './styles.module.css'
 
 const navigation: { id: CmsSection; label: string; icon: typeof HiOutlineHome }[] = [
@@ -52,10 +64,20 @@ const navigation: { id: CmsSection; label: string; icon: typeof HiOutlineHome }[
   { id: 'publications', label: 'Publications', icon: HiOutlineBookOpen },
   { id: 'capabilities', label: 'Capabilities', icon: HiOutlineWrenchScrewdriver },
   { id: 'education', label: 'Education', icon: HiOutlineAcademicCap },
+  { id: 'learning', label: 'Learning', icon: HiOutlineLightBulb },
+  { id: 'work', label: 'Work', icon: HiOutlineSparkles },
   { id: 'contact', label: 'Contact copy', icon: HiOutlineChatBubbleLeftRight },
+  { id: 'messages', label: 'Messages', icon: HiOutlineInbox },
   { id: 'media', label: 'Media', icon: HiOutlinePhoto },
   { id: 'settings', label: 'SEO & Settings', icon: HiOutlineCog6Tooth },
-  { id: 'revisions', label: 'Revisions', icon: HiOutlineClock }
+  { id: 'revisions', label: 'Revisions', icon: HiOutlineClock },
+  { id: 'account', label: 'Account', icon: HiOutlineLockClosed }
+]
+
+const messageStatusOptions = [
+  { value: 'NEW', label: 'New' },
+  { value: 'READ', label: 'Read' },
+  { value: 'ARCHIVED', label: 'Archived' }
 ]
 
 const Dashboard = ({ data, navigate }: { data: AdminData; navigate: (section: CmsSection) => void }) => {
@@ -63,7 +85,10 @@ const Dashboard = ({ data, navigate }: { data: AdminData; navigate: (section: Cm
     ['Experience', data.draft.experiences.length, 'experience'],
     ['Publications', data.draft.publications.length, 'publications'],
     ['Capabilities', data.draft.capabilities.length, 'capabilities'],
-    ['Education', data.draft.education.length, 'education']
+    ['Education', data.draft.education.length, 'education'],
+    ['Learning', data.draft.learning.length, 'learning'],
+    ['Work', data.draft.workStories.length, 'work'],
+    ['Messages', data.messages.length, 'messages']
   ] as const
   const missing = [
     !data.draft.settings.heroImage && 'Hero portrait is missing',
@@ -125,6 +150,162 @@ const Dashboard = ({ data, navigate }: { data: AdminData; navigate: (section: Cm
   )
 }
 
+const MessagesPanel = ({ data }: { data: AdminData }) => {
+  const router = useRouter()
+  const [result, setResult] = useState<AnyAdminActionResult | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  return (
+    <Stack className={classes.formCard} gap="lg">
+      <div>
+        <Title order={2}>Messages</Title>
+        <Text c="dimmed">Contact form submissions from the public site.</Text>
+      </div>
+      <ResultAlert result={result} />
+      {!data.messages.length && <Text c="dimmed">No messages yet.</Text>}
+      <Stack gap="sm">
+        {data.messages.map((message) => (
+          <Card key={message.id} withBorder radius="md" padding="md">
+            <Group justify="space-between" align="flex-start" wrap="wrap">
+              <div className={classes.grow}>
+                <Group gap="xs">
+                  <Text fw={700}>{message.subject}</Text>
+                  <Badge color={message.status === 'NEW' ? 'orange' : message.status === 'READ' ? 'blue' : 'gray'}>
+                    {message.status}
+                  </Badge>
+                </Group>
+                <Text size="sm" c="dimmed">
+                  {message.name} · {message.email} · {new Date(message.createdAt).toLocaleString()}
+                </Text>
+                <Text mt="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                  {message.message}
+                </Text>
+              </div>
+              <Select
+                aria-label={`Status for ${message.subject}`}
+                data={messageStatusOptions}
+                value={message.status}
+                disabled={pending}
+                w={160}
+                onChange={(next) => {
+                  if (!next || next === message.status) return
+                  startTransition(async () => {
+                    const response = await updateContactMessageStatus(
+                      message.id,
+                      next as 'NEW' | 'READ' | 'ARCHIVED'
+                    )
+                    setResult(response)
+                    if (response.ok) router.refresh()
+                  })
+                }}
+              />
+            </Group>
+          </Card>
+        ))}
+      </Stack>
+    </Stack>
+  )
+}
+
+const AccountPanel = () => {
+  const router = useRouter()
+  const [result, setResult] = useState<AnyAdminActionResult | null>(null)
+  const [pending, startTransition] = useTransition()
+  const form = useForm({
+    mode: 'controlled',
+    initialValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+  })
+  useUnsavedWarning(form.isDirty())
+
+  return (
+    <Stack gap="xl">
+      <form
+        className={classes.formCard}
+        onSubmit={form.onSubmit((values) =>
+          startTransition(async () => {
+            const response = await changeAdminPassword(values)
+            setResult(response)
+            if (!response.ok && response.fieldErrors) form.setErrors(response.fieldErrors)
+            if (response.ok) {
+              form.reset()
+              router.refresh()
+            }
+          })
+        )}
+      >
+        <Stack gap="lg">
+          <div>
+            <Title order={2}>Account</Title>
+            <Text c="dimmed">Change your admin password or revoke active sessions.</Text>
+          </div>
+          <ResultAlert result={result} />
+          <PasswordInput
+            label="Current password"
+            required
+            autoComplete="current-password"
+            {...form.getInputProps('currentPassword')}
+          />
+          <PasswordInput
+            label="New password"
+            description="At least 12 characters"
+            required
+            autoComplete="new-password"
+            {...form.getInputProps('newPassword')}
+          />
+          <PasswordInput
+            label="Confirm new password"
+            required
+            autoComplete="new-password"
+            {...form.getInputProps('confirmPassword')}
+          />
+          <Group justify="flex-end">
+            {form.isDirty() && (
+              <Text size="sm" c="orange">
+                Unsaved changes
+              </Text>
+            )}
+            <Button type="submit" loading={pending} disabled={!form.isDirty()}>
+              Update password
+            </Button>
+          </Group>
+        </Stack>
+      </form>
+      <Card withBorder radius="md" className={classes.formCard}>
+        <Stack>
+          <Title order={3} size="h4">
+            Sessions
+          </Title>
+          <Text c="dimmed" size="sm">
+            Sign out every admin session, including this one. You will need to sign in again.
+          </Text>
+          <Button
+            color="red"
+            variant="light"
+            loading={pending}
+            onClick={() => {
+              if (!window.confirm('Revoke all admin sessions and sign out?')) return
+              startTransition(async () => {
+                const response = await revokeAllAdminSessions()
+                setResult(response)
+                if (response.ok) {
+                  router.replace('/admin/login')
+                  router.refresh()
+                }
+              })
+            }}
+          >
+            Revoke all sessions
+          </Button>
+        </Stack>
+      </Card>
+    </Stack>
+  )
+}
+
 const AdminPanel = ({ data }: { data: AdminData }) => {
   const router = useRouter()
   const [section, setSection] = useState<CmsSection>('dashboard')
@@ -164,7 +345,7 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
       <Dashboard data={data} navigate={navigate} />
     ) : section === 'profile' ? (
       <ProfileHeroForm
-        key={`${data.timestamps.profile}-${data.timestamps.copy}-${data.timestamps.settings}`}
+        key={`${data.timestamps.profile}-${data.timestamps.hero}-${data.timestamps.settings}`}
         data={data}
       />
     ) : section === 'about' ? (
@@ -180,12 +361,20 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
       <CrudManager kind="capability" data={data} />
     ) : section === 'education' ? (
       <CrudManager kind="education" data={data} />
+    ) : section === 'learning' ? (
+      <CrudManager kind="learning" data={data} />
+    ) : section === 'work' ? (
+      <CrudManager kind="work" data={data} />
     ) : section === 'contact' ? (
       <SectionCopyForm key={data.timestamps.copy} data={data} mode="contact" />
+    ) : section === 'messages' ? (
+      <MessagesPanel data={data} />
     ) : section === 'media' ? (
       <MediaManager data={data} />
     ) : section === 'settings' ? (
       <SettingsForm key={data.timestamps.settings} data={data} />
+    ) : section === 'account' ? (
+      <AccountPanel />
     ) : (
       <RevisionsPanel data={data} />
     )
@@ -234,7 +423,7 @@ const AdminPanel = ({ data }: { data: AdminData }) => {
             color="gray"
             onClick={() =>
               startTransition(async () => {
-                await authClient.signOut()
+                await signOutAdmin()
                 router.replace('/admin/login')
                 router.refresh()
               })

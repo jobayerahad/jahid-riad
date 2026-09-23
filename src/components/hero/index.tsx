@@ -44,6 +44,16 @@ const Hero = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
               >
                 {actions.secondary.label} <HiArrowDown aria-hidden="true" />
               </a>
+              {snapshot.settings.cvAsset?.url ? (
+                <a
+                  href={snapshot.settings.cvAsset.url}
+                  className={classes.secondaryAction}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download CV <HiArrowRight aria-hidden="true" />
+                </a>
+              ) : null}
             </Reveal>
           </MotionGroup>
 

@@ -6,22 +6,22 @@ import { schemaResolver, useForm } from '@mantine/form'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { HiOutlinePaperAirplane } from 'react-icons/hi2'
 import { sendMessage } from '@/actions/contact'
-import { contactSchema, type ContactInput } from '@/schemas/contact'
+import { contactClientSchema, type ContactClientInput } from '@/schemas/contact'
 import type { ContactResult } from '@/types'
 import classes from './styles.module.css'
 
 type Props = { configured: boolean }
 
-const INITIAL_VALUES: ContactInput = { name: '', email: '', subject: '', message: '', token: '' }
+const INITIAL_VALUES: ContactClientInput = { name: '', email: '', subject: '', message: '' }
 
 const ContactForm = ({ configured }: Props) => {
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<ContactResult | null>(null)
   const recaptcha = useGoogleReCaptcha()
-  const form = useForm<ContactInput>({
+  const form = useForm<ContactClientInput>({
     mode: 'uncontrolled',
     initialValues: INITIAL_VALUES,
-    validate: schemaResolver(contactSchema, { sync: true })
+    validate: schemaResolver(contactClientSchema, { sync: true })
   })
 
   const focusFirstError = () => {
@@ -30,7 +30,7 @@ const ContactForm = ({ configured }: Props) => {
     })
   }
 
-  const handleSubmit = (values: ContactInput) => {
+  const handleSubmit = (values: ContactClientInput) => {
     setResult(null)
     startTransition(async () => {
       if (!recaptcha.executeRecaptcha) {

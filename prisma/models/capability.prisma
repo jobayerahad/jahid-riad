@@ -1,0 +1,25 @@
+model CapabilityGroupDraft {
+  id          String                @id @default(uuid())
+  title       String
+  description String
+  sortOrder   Int                   @default(0) @map("sort_order")
+  enabled     Boolean               @default(true)
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+  updatedBy   String?               @map("updated_by")
+  items       CapabilityItemDraft[]
+
+  @@index([sortOrder], map: "capability_group_drafts_sort_order_idx")
+  @@map("capability_group_drafts")
+}
+
+model CapabilityItemDraft {
+  id        String               @id @default(uuid())
+  groupId   String               @map("group_id")
+  label     String
+  sortOrder Int                  @default(0) @map("sort_order")
+  group     CapabilityGroupDraft @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, sortOrder], map: "capability_items_parent_sort_idx")
+  @@map("capability_item_drafts")
+}

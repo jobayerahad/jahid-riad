@@ -1,0 +1,27 @@
+model ContentRevision {
+  id            String   @id @default(uuid())
+  version       Int      @unique @default(autoincrement())
+  schemaVersion Int      @default(2) @map("schema_version")
+  snapshot      Json
+  note          String?
+  publishedAt   DateTime @default(now()) @map("published_at")
+  publishedBy   String   @map("published_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  state PublishState?
+
+  @@map("content_revisions")
+}
+
+model PublishState {
+  id                    String           @id @default("primary")
+  activeRevisionId      String?          @unique @map("active_revision_id")
+  activeRevision        ContentRevision? @relation(fields: [activeRevisionId], references: [id], onDelete: SetNull)
+  hasUnpublishedChanges Boolean          @default(true) @map("has_unpublished_changes")
+  draftUpdatedAt        DateTime         @default(now()) @map("draft_updated_at")
+  draftUpdatedBy        String?          @map("draft_updated_by")
+  publishedAt           DateTime?        @map("published_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  @@map("publish_state")
+}

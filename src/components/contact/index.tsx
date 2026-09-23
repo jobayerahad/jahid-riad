@@ -10,8 +10,9 @@ import classes from './styles.module.css'
 import type { PublishedPortfolioSnapshot } from '@/schemas/portfolio-content'
 
 const Contact = async ({ content }: { content?: PublishedPortfolioSnapshot }) => {
-  const { profile, copy } = content ?? (await getPortfolioContent())
-  const portrait = getContactPortrait()
+  const snapshot = content ?? (await getPortfolioContent())
+  const { profile, copy, settings } = snapshot
+  const portrait = getContactPortrait(settings)
 
   return (
     <section id="contact" className={classes.section} aria-labelledby="contact-title">
@@ -49,20 +50,22 @@ const Contact = async ({ content }: { content?: PublishedPortfolioSnapshot }) =>
             </Reveal>
           </MotionGroup>
 
-          <Reveal className={classes.portraitColumn} delay={60} variant="image">
-            <figure className={classes.portraitFigure}>
-              <div className={classes.portraitFrame} style={{ position: 'relative' }}>
-                <Image
-                  src={portrait.url}
-                  alt={portrait.altText}
-                  fill
-                  sizes="(max-width: 48em) 14rem, (max-width: 62em) 13rem, 15vw"
-                  className={classes.portrait}
-                />
-              </div>
-              <figcaption>{profile.shortName}</figcaption>
-            </figure>
-          </Reveal>
+          {portrait ? (
+            <Reveal className={classes.portraitColumn} delay={60} variant="image">
+              <figure className={classes.portraitFigure}>
+                <div className={classes.portraitFrame} style={{ position: 'relative' }}>
+                  <Image
+                    src={portrait.url}
+                    alt={portrait.altText ?? profile.name}
+                    fill
+                    sizes="(max-width: 48em) 14rem, (max-width: 62em) 13rem, 15vw"
+                    className={classes.portrait}
+                  />
+                </div>
+                <figcaption>{profile.shortName}</figcaption>
+              </figure>
+            </Reveal>
+          ) : null}
 
           <Reveal className={classes.formColumn} delay={100} direction="right">
             <LazyContactForm siteKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''} />

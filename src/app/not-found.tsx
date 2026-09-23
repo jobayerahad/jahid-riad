@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Container, Title, Text, Button, SimpleGrid, Group, Flex } from '@mantine/core'
 import { IoHome } from 'react-icons/io5'
@@ -10,7 +11,7 @@ const NotFound = () => {
   const { back } = useRouter()
 
   return (
-    <div className={classes.wrapper}>
+    <main className={classes.wrapper}>
       <Container size="md">
         <SimpleGrid cols={{ base: 1, md: 2 }}>
           <Flex direction="column" justify="center">
@@ -23,17 +24,23 @@ const NotFound = () => {
             </Text>
 
             <Group>
-              <Button component="a" href="/" size="md" leftSection={<IoHome />}>
+              <Button component={Link} href="/" size="md" leftSection={<IoHome aria-hidden="true" />}>
                 Go Home
               </Button>
 
-              <Button color="white" variant="outline" size="md" leftSection={<FaArrowLeft />} onClick={back}>
+              <Button
+                color="white"
+                variant="outline"
+                size="md"
+                leftSection={<FaArrowLeft aria-hidden="true" />}
+                onClick={back}
+              >
                 Go Back
               </Button>
             </Group>
           </Flex>
 
-          <div className={classes.illustration}>
+          <div className={classes.illustration} aria-hidden="true">
             <div className={classes.orbit}></div>
             <div className={classes.planet}></div>
             <div className={classes.rocket}>
@@ -44,7 +51,7 @@ const NotFound = () => {
           </div>
         </SimpleGrid>
       </Container>
-    </div>
+    </main>
   )
 }
 

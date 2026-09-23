@@ -1,0 +1,9 @@
+.filters {
+  margin-bottom: 0.75rem;
+}
+.count {
+  margin-bottom: 1rem;
+}
+.list {
+  display: grid;
+}

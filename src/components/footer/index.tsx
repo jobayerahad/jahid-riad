@@ -19,14 +19,17 @@ const Footer = async ({ content }: { content?: PublishedPortfolioSnapshot }) => 
           <Text>{profile.positioning}</Text>
         </div>
         <nav className={classes.nav} aria-label="Footer navigation">
+          <Link href="/profile">
+            Profile <HiArrowRight aria-hidden="true" />
+          </Link>
+          <Link href="/publications">
+            Publications <HiArrowRight aria-hidden="true" />
+          </Link>
           <Link href="/#work">
             Work <HiArrowRight aria-hidden="true" />
           </Link>
           <Link href="/#research">
             Research <HiArrowRight aria-hidden="true" />
-          </Link>
-          <Link href="/#about">
-            About <HiArrowRight aria-hidden="true" />
           </Link>
           <Link href="/#contact">
             Contact <HiArrowRight aria-hidden="true" />

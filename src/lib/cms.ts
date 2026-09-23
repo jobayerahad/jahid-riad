@@ -1,15 +1,33 @@
+import { cacheTag } from 'next/cache'
 import { cache } from 'react'
-import { Prisma } from '@/generated/prisma/client'
+import {
+  MediaKind,
+  MediaSource,
+  Prisma,
+  PublicationStatus,
+  PublicationType,
+  SiteSection,
+  SocialPlatform
+} from '@/generated/prisma/client'
 import { capabilityGroups } from '@/data/capabilities'
-import { defaultContentCopy, defaultSiteSettings } from '@/data/cms-defaults'
+import {
+  defaultAboutPrinciples,
+  defaultContentCopy,
+  defaultHeroCopy,
+  defaultLearning,
+  defaultSectionCopy,
+  defaultSiteSettings,
+  defaultWorkStories
+} from '@/data/cms-defaults'
 import { education } from '@/data/education'
 import { experiences } from '@/data/experience'
 import { profile } from '@/data/profile'
 import { publications } from '@/data/publications'
 import { isDatabaseConfigured, prisma } from '@/lib/prisma'
 import {
-  legacyPortfolioContentSchema,
+  publicationTypeSchema,
   publishedPortfolioSnapshotSchema,
+  upgradeSnapshot,
   type PublishedPortfolioSnapshot
 } from '@/schemas/portfolio-content'
 
@@ -18,10 +36,9 @@ type DbClient = Prisma.TransactionClient | typeof prisma
 const localMedia = [
   {
     id: 'local-hero',
-    source: 'LOCAL',
-    kind: 'IMAGE',
+    source: MediaSource.LOCAL,
+    kind: MediaKind.IMAGE,
     secureUrl: '/riad-01.jpg',
-    resourceType: 'image',
     width: 472,
     height: 472,
     originalFilename: 'riad-01.jpg',
@@ -29,10 +46,9 @@ const localMedia = [
   },
   {
     id: 'local-about',
-    source: 'LOCAL',
-    kind: 'IMAGE',
+    source: MediaSource.LOCAL,
+    kind: MediaKind.IMAGE,
     secureUrl: '/riad-02.jpg',
-    resourceType: 'image',
     width: 824,
     height: 1035,
     originalFilename: 'riad-02.jpg',
@@ -40,10 +56,9 @@ const localMedia = [
   },
   {
     id: 'local-personal',
-    source: 'LOCAL',
-    kind: 'IMAGE',
+    source: MediaSource.LOCAL,
+    kind: MediaKind.IMAGE,
     secureUrl: '/riad-03.jpg',
-    resourceType: 'image',
     width: 959,
     height: 959,
     originalFilename: 'riad-03.jpg',
@@ -51,10 +66,9 @@ const localMedia = [
   },
   {
     id: 'local-logo',
-    source: 'LOCAL',
-    kind: 'IMAGE',
+    source: MediaSource.LOCAL,
+    kind: MediaKind.IMAGE,
     secureUrl: '/logo-flat.png',
-    resourceType: 'image',
     width: 836,
     height: 298,
     originalFilename: 'logo-flat.png',
@@ -65,7 +79,7 @@ const localMedia = [
 const mediaReference = (asset: {
   id: string
   secureUrl: string
-  kind: string
+  kind: MediaKind | string
   width: number | null
   height: number | null
   altText: string | null
@@ -73,7 +87,7 @@ const mediaReference = (asset: {
 }) => ({
   id: asset.id,
   url: asset.secureUrl,
-  kind: asset.kind === 'PDF' ? ('PDF' as const) : ('IMAGE' as const),
+  kind: asset.kind === 'PDF' || asset.kind === MediaKind.PDF ? ('PDF' as const) : ('IMAGE' as const),
   width: asset.width,
   height: asset.height,
   altText: asset.altText,
@@ -93,23 +107,70 @@ const fallbackMedia = Object.fromEntries(
   ])
 )
 
+const publicationTypeFromLabel = (type: string) => {
+  const lower = type.toLowerCase()
+  if (lower.includes('journal')) return 'JOURNAL_ARTICLE' as const
+  if (lower.includes('workshop')) return 'WORKSHOP_PAPER' as const
+  if (lower.includes('chapter') || lower.includes('book')) return 'BOOK_CHAPTER' as const
+  if (lower.includes('preprint')) return 'PREPRINT' as const
+  if (lower.includes('thesis')) return 'THESIS' as const
+  if (lower.includes('conference') || lower.includes('ieee')) return 'CONFERENCE_PAPER' as const
+  return 'OTHER' as const
+}
+
+const toSocialPlatform = (kind: string): SocialPlatform => {
+  const upper = kind.toUpperCase() as SocialPlatform
+  if (Object.values(SocialPlatform).includes(upper)) return upper
+  return SocialPlatform.WEBSITE
+}
+
+const fromSocialPlatform = (kind: SocialPlatform | string) => String(kind).toLowerCase() as
+  | 'linkedin'
+  | 'scholar'
+  | 'github'
+  | 'orcid'
+  | 'researchgate'
+  | 'x'
+  | 'email'
+  | 'website'
+
 export const fallbackPublishedSnapshot: PublishedPortfolioSnapshot = publishedPortfolioSnapshotSchema.parse({
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: {
     ...defaultSiteSettings,
-    heroImage: fallbackMedia['local-hero'],
-    aboutImage: fallbackMedia['local-about'],
+    heroImage: fallbackMedia['local-about'],
+    aboutImage: fallbackMedia['local-personal'],
     logoImage: fallbackMedia['local-logo']
   },
   copy: defaultContentCopy,
+  hero: defaultHeroCopy,
+  sections: defaultSectionCopy,
+  principles: defaultAboutPrinciples.map((item, index) => ({ ...item, id: `principle-${index + 1}` })),
   profile: {
     ...profile,
     socialLinks: profile.socialLinks.map((link, index) => ({ ...link, id: `social-${index + 1}`, enabled: true }))
   },
-  experiences: experiences.map((item) => ({ ...item, enabled: true })),
+  experiences: experiences.map((item) => ({
+    ...item,
+    current: item.current ?? !item.endDate,
+    enabled: true
+  })),
   education: education.map((item) => ({ ...item, enabled: true })),
-  publications: publications.map((item) => ({ ...item, authors: item.authors ?? [], enabled: true })),
-  capabilities: capabilityGroups.map((item) => ({ ...item, enabled: true }))
+  publications: publications.map((item) => ({
+    ...item,
+    slug: item.id,
+    type: publicationTypeFromLabel(item.type),
+    status: 'PUBLISHED' as const,
+    authors: (item.authors ?? []).map((author) => {
+      const name = typeof author === 'string' ? author : author.name
+      return { name, isSelf: /jahid|riad/i.test(name) }
+    }),
+    scholarUrl: item.scholarUrl || '',
+    enabled: true
+  })),
+  capabilities: capabilityGroups.map((item) => ({ ...item, enabled: true })),
+  learning: defaultLearning.map((item, index) => ({ ...item, id: `learning-${index + 1}`, enabled: true })),
+  workStories: defaultWorkStories.map((item, index) => ({ ...item, id: `work-${index + 1}`, enabled: true }))
 })
 
 const dateValue = (value: Date) => value.toISOString().slice(0, 10)
@@ -117,45 +178,109 @@ const dateValue = (value: Date) => value.toISOString().slice(0, 10)
 const monthYear = (value: Date) =>
   new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(value)
 
-const experiencePeriod = (startDate: Date, endDate: Date | null, current: boolean) =>
-  `${monthYear(startDate)} – ${current ? 'Present' : endDate ? monthYear(endDate) : 'Present'}`
+const experiencePeriod = (startDate: Date, endDate: Date | null) =>
+  `${monthYear(startDate)} – ${endDate ? monthYear(endDate) : 'Present'}`
 
-const enrichLegacy = (data: unknown): PublishedPortfolioSnapshot => {
-  const parsed = legacyPortfolioContentSchema.safeParse(data)
-  if (!parsed.success) return fallbackPublishedSnapshot
+const sectionMap = (sections: Array<{ section: SiteSection; eyebrow: string; title: string; description: string; actionLabel: string | null }>) =>
+  Object.fromEntries(sections.map((section) => [section.section, section]))
 
-  return publishedPortfolioSnapshotSchema.parse({
-    ...fallbackPublishedSnapshot,
-    profile: {
-      ...parsed.data.profile,
-      socialLinks: parsed.data.profile.socialLinks.map((link, index) => ({
-        ...link,
-        id: `social-${index + 1}`,
-        enabled: true
-      }))
-    },
-    experiences: parsed.data.experiences.map((item) => ({ ...item, enabled: true })),
-    education: parsed.data.education.map((item) => ({ ...item, enabled: true })),
-    publications: parsed.data.publications.map((item) => ({ ...item, authors: item.authors ?? [], enabled: true })),
-    capabilities: parsed.data.capabilities.map((item) => ({ ...item, enabled: true }))
-  })
+const buildFlatCopy = (
+  hero: {
+    heading: string
+    accent: string
+    introduction: string
+    primaryLabel: string
+    primaryHref: string
+    secondaryLabel: string
+    secondaryHref: string
+    focusLabel: string
+  },
+  sections: Array<{ section: SiteSection; eyebrow: string; title: string; description: string; actionLabel: string | null }>,
+  principles: Array<{ id: string; title: string; text: string; enabled: boolean }>,
+  aboutExtras: { aboutBody: string; aboutImageAlt: string; aboutCaptionLabel: string; contactPanelTitle: string; contactPrivacyCopy: string }
+) => {
+  const bySection = sectionMap(sections)
+  const about = bySection[SiteSection.ABOUT] ?? bySection.ABOUT
+  const experience = bySection[SiteSection.EXPERIENCE] ?? bySection.EXPERIENCE
+  const publicationsSection = bySection[SiteSection.PUBLICATIONS] ?? bySection.PUBLICATIONS
+  const capabilities = bySection[SiteSection.CAPABILITIES] ?? bySection.CAPABILITIES
+  const educationSection = bySection[SiteSection.EDUCATION] ?? bySection.EDUCATION
+  const learning = bySection[SiteSection.LEARNING] ?? bySection.LEARNING
+  const work = bySection[SiteSection.WORK] ?? bySection.WORK
+  const contact = bySection[SiteSection.CONTACT] ?? bySection.CONTACT
+
+  return {
+    heroHeading: hero.heading,
+    heroAccent: hero.accent,
+    heroIntroduction: hero.introduction,
+    heroPrimaryLabel: hero.primaryLabel,
+    heroPrimaryHref: hero.primaryHref,
+    heroSecondaryLabel: hero.secondaryLabel,
+    heroSecondaryHref: hero.secondaryHref,
+    heroFocusLabel: hero.focusLabel,
+    aboutEyebrow: about?.eyebrow ?? 'Profile',
+    aboutTitle: about?.title ?? 'About',
+    aboutBody: aboutExtras.aboutBody,
+    aboutImageAlt: aboutExtras.aboutImageAlt,
+    aboutCaptionLabel: aboutExtras.aboutCaptionLabel,
+    principles,
+    experienceEyebrow: experience?.eyebrow ?? 'Experience',
+    experienceTitle: experience?.title ?? 'Experience',
+    experienceDescription: experience?.description ?? '',
+    publicationsEyebrow: publicationsSection?.eyebrow ?? 'Research',
+    publicationsTitle: publicationsSection?.title ?? 'Publications',
+    publicationsDescription: publicationsSection?.description ?? '',
+    publicationsActionLabel: publicationsSection?.actionLabel || 'View all publications',
+    capabilitiesEyebrow: capabilities?.eyebrow ?? 'Capabilities',
+    capabilitiesTitle: capabilities?.title ?? 'Capabilities',
+    capabilitiesDescription: capabilities?.description ?? '',
+    educationEyebrow: educationSection?.eyebrow ?? 'Education',
+    educationTitle: educationSection?.title ?? 'Education',
+    educationDescription: educationSection?.description ?? '',
+    learningEyebrow: learning?.eyebrow ?? 'Learning',
+    learningTitle: learning?.title ?? 'Professional learning',
+    learningDescription: learning?.description ?? '',
+    workEyebrow: work?.eyebrow ?? 'Selected work',
+    workTitle: work?.title ?? 'Selected work',
+    workDescription: work?.description ?? '',
+    contactEyebrow: contact?.eyebrow ?? 'Contact',
+    contactTitle: contact?.title ?? 'Contact',
+    contactDescription: contact?.description ?? '',
+    contactPanelTitle: aboutExtras.contactPanelTitle,
+    contactPrivacyCopy: aboutExtras.contactPrivacyCopy
+  }
 }
 
 export const readDraftSnapshot = async (db: DbClient = prisma): Promise<PublishedPortfolioSnapshot> => {
   const [
     settings,
     profileDraft,
-    copy,
+    hero,
+    sections,
+    principles,
     socialLinks,
     experienceDrafts,
     educationDrafts,
     publicationDrafts,
     groups,
+    learningDrafts,
+    workStories,
     assets
   ] = await Promise.all([
-    db.siteSettings.findUnique({ where: { id: 'primary' } }),
+    db.siteSettings.findUnique({
+      where: { id: 'primary' },
+      include: {
+        heroImage: true,
+        aboutImage: true,
+        logoImage: true,
+        openGraphImage: true,
+        cvAsset: true
+      }
+    }),
     db.profileDraft.findUnique({ where: { id: 'primary' } }),
-    db.contentCopyDraft.findUnique({ where: { id: 'primary' } }),
+    db.heroCopyDraft.findUnique({ where: { id: 'primary' } }),
+    db.sectionCopyDraft.findMany(),
+    db.aboutPrincipleDraft.findMany({ orderBy: { sortOrder: 'asc' } }),
     db.socialLinkDraft.findMany({ orderBy: { sortOrder: 'asc' } }),
     db.experienceDraft.findMany({
       include: { highlights: { orderBy: { sortOrder: 'asc' } } },
@@ -163,69 +288,147 @@ export const readDraftSnapshot = async (db: DbClient = prisma): Promise<Publishe
     }),
     db.educationDraft.findMany({ orderBy: { sortOrder: 'asc' } }),
     db.publicationDraft.findMany({
-      include: { authors: { orderBy: { sortOrder: 'asc' } }, topics: { orderBy: { sortOrder: 'asc' } } },
+      include: {
+        authors: { orderBy: { sortOrder: 'asc' } },
+        topics: { include: { topic: true }, orderBy: { sortOrder: 'asc' } },
+        coverImage: true,
+        pdfAsset: true
+      },
       orderBy: { sortOrder: 'asc' }
     }),
     db.capabilityGroupDraft.findMany({
       include: { items: { orderBy: { sortOrder: 'asc' } } },
       orderBy: { sortOrder: 'asc' }
     }),
+    db.learningDraft.findMany({ orderBy: { sortOrder: 'asc' } }),
+    db.workStoryDraft.findMany({ orderBy: { sortOrder: 'asc' } }),
     db.mediaAsset.findMany({ where: { archivedAt: null } })
   ])
 
-  if (!settings || !profileDraft || !copy) throw new Error('CMS draft has not been initialized.')
-  const assetMap = new Map(assets.map((asset) => [asset.id, mediaReference(asset)]))
-  const resolvedSettings = {
-    ...settings,
-    heroImage: settings.heroImageId ? assetMap.get(settings.heroImageId) : undefined,
-    aboutImage: settings.aboutImageId ? assetMap.get(settings.aboutImageId) : undefined,
-    logoImage: settings.logoImageId ? assetMap.get(settings.logoImageId) : undefined,
-    openGraphImage: settings.openGraphImageId ? assetMap.get(settings.openGraphImageId) : undefined,
-    cvAsset: settings.cvAssetId ? assetMap.get(settings.cvAssetId) : undefined
-  }
+  if (!settings || !profileDraft || !hero) throw new Error('CMS draft has not been initialized.')
+
+  const aboutSection = sections.find((section) => section.section === SiteSection.ABOUT)
+  const principleRows = principles.map((item) => ({
+    id: item.id,
+    title: item.title,
+    text: item.text,
+    enabled: item.enabled
+  }))
+
+  const copy = buildFlatCopy(hero, sections, principleRows, {
+    aboutBody: aboutSection?.description ?? defaultContentCopy.aboutBody,
+    aboutImageAlt:
+      profileDraft.aboutImageAlt ||
+      settings.aboutImage?.altText ||
+      defaultContentCopy.aboutImageAlt,
+    aboutCaptionLabel: profileDraft.aboutCaptionLabel || defaultContentCopy.aboutCaptionLabel,
+    contactPanelTitle: profileDraft.contactPanelTitle || defaultContentCopy.contactPanelTitle,
+    contactPrivacyCopy: profileDraft.contactPrivacyCopy || defaultContentCopy.contactPrivacyCopy
+  })
+
+  void assets
 
   return publishedPortfolioSnapshotSchema.parse({
-    schemaVersion: 1,
-    settings: resolvedSettings,
+    schemaVersion: 2,
+    settings: {
+      ...settings,
+      heroImage: settings.heroImage ? mediaReference(settings.heroImage) : undefined,
+      aboutImage: settings.aboutImage ? mediaReference(settings.aboutImage) : undefined,
+      logoImage: settings.logoImage ? mediaReference(settings.logoImage) : undefined,
+      openGraphImage: settings.openGraphImage ? mediaReference(settings.openGraphImage) : undefined,
+      cvAsset: settings.cvAsset ? mediaReference(settings.cvAsset) : undefined
+    },
     copy,
+    hero: {
+      heading: hero.heading,
+      accent: hero.accent,
+      introduction: hero.introduction,
+      primaryLabel: hero.primaryLabel,
+      primaryHref: hero.primaryHref,
+      secondaryLabel: hero.secondaryLabel,
+      secondaryHref: hero.secondaryHref,
+      focusLabel: hero.focusLabel
+    },
+    sections: sections.map((section) => ({
+      section: section.section,
+      eyebrow: section.eyebrow,
+      title: section.title,
+      description: section.description,
+      actionLabel: section.actionLabel ?? ''
+    })),
+    principles: principleRows,
     profile: {
       ...profileDraft,
-      socialLinks: socialLinks.map((link) => ({ ...link, kind: link.kind.toLowerCase() }))
+      socialLinks: socialLinks.map((link) => ({
+        ...link,
+        kind: fromSocialPlatform(link.kind)
+      }))
     },
     experiences: experienceDrafts.map((item) => ({
       ...item,
+      organizationUrl: item.organizationUrl ?? '',
       startDate: dateValue(item.startDate),
       endDate: item.endDate ? dateValue(item.endDate) : undefined,
-      period: experiencePeriod(item.startDate, item.endDate, item.current),
+      current: !item.endDate,
+      period: experiencePeriod(item.startDate, item.endDate),
       highlights: item.highlights.map((highlight) => highlight.text),
       updatedAt: item.updatedAt.toISOString()
     })),
-    education: educationDrafts.map((item) => ({ ...item, updatedAt: item.updatedAt.toISOString() })),
+    education: educationDrafts.map((item) => ({
+      ...item,
+      detail: item.detail ?? '',
+      updatedAt: item.updatedAt.toISOString()
+    })),
     publications: publicationDrafts.map((item) => ({
       ...item,
-      venue: item.venue ?? undefined,
-      pages: item.pages ?? undefined,
-      doi: item.doi ?? undefined,
-      paperUrl: item.paperUrl ?? undefined,
-      abstract: item.abstract ?? undefined,
-      mediaAssetId: item.mediaAssetId,
-      media: item.mediaAssetId ? assetMap.get(item.mediaAssetId) : undefined,
-      authors: item.authors.map((author) => author.name),
-      topics: item.topics.map((topic) => topic.name),
+      venue: item.venue ?? '',
+      pages: item.pages ?? '',
+      doi: item.doi ?? '',
+      paperUrl: item.paperUrl ?? '',
+      scholarUrl: item.scholarUrl ?? '',
+      abstract: item.abstract ?? '',
+      bibtex: item.bibtex ?? '',
+      coverImageId: item.coverImageId,
+      pdfAssetId: item.pdfAssetId,
+      coverImage: item.coverImage ? mediaReference(item.coverImage) : undefined,
+      pdfAsset: item.pdfAsset ? mediaReference(item.pdfAsset) : undefined,
+      authors: item.authors.map((author) => ({ name: author.name, isSelf: author.isSelf })),
+      topics: item.topics.map((row) => row.topic.name),
       updatedAt: item.updatedAt.toISOString()
     })),
     capabilities: groups.map((group) => ({
       ...group,
       items: group.items.map((item) => item.label),
       updatedAt: group.updatedAt.toISOString()
+    })),
+    learning: learningDrafts.map((item) => ({
+      ...item,
+      credentialUrl: item.credentialUrl ?? '',
+      updatedAt: item.updatedAt.toISOString()
+    })),
+    workStories: workStories.map((item) => ({
+      ...item,
+      updatedAt: item.updatedAt.toISOString()
     }))
   })
 }
 
 const settingsData = (snapshot: PublishedPortfolioSnapshot, email: string) => {
   const { heroImage, aboutImage, logoImage, openGraphImage, cvAsset, ...settings } = snapshot.settings
+  void heroImage
+  void aboutImage
+  void logoImage
+  void openGraphImage
+  void cvAsset
   return { ...settings, updatedBy: email }
 }
+
+export const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80)
 
 export const replaceDraftFromSnapshot = async (
   db: Prisma.TransactionClient,
@@ -234,9 +437,14 @@ export const replaceDraftFromSnapshot = async (
 ) => {
   await db.experienceDraft.deleteMany()
   await db.educationDraft.deleteMany()
+  await db.publicationTopicDraft.deleteMany()
   await db.publicationDraft.deleteMany()
   await db.capabilityGroupDraft.deleteMany()
   await db.socialLinkDraft.deleteMany()
+  await db.aboutPrincipleDraft.deleteMany()
+  await db.learningDraft.deleteMany()
+  await db.workStoryDraft.deleteMany()
+  await db.sectionCopyDraft.deleteMany()
 
   await db.siteSettings.upsert({
     where: { id: 'primary' },
@@ -245,14 +453,71 @@ export const replaceDraftFromSnapshot = async (
   })
   await db.profileDraft.upsert({
     where: { id: 'primary' },
-    create: { id: 'primary', ...snapshot.profile, socialLinks: undefined, updatedBy: email },
-    update: { ...snapshot.profile, socialLinks: undefined, updatedBy: email }
+    create: {
+      id: 'primary',
+      name: snapshot.profile.name,
+      shortName: snapshot.profile.shortName,
+      role: snapshot.profile.role,
+      positioning: snapshot.profile.positioning,
+      summary: snapshot.profile.summary,
+      location: snapshot.profile.location,
+      aboutImageAlt: snapshot.copy.aboutImageAlt,
+      aboutCaptionLabel: snapshot.copy.aboutCaptionLabel,
+      contactPanelTitle: snapshot.copy.contactPanelTitle,
+      contactPrivacyCopy: snapshot.copy.contactPrivacyCopy,
+      updatedBy: email
+    },
+    update: {
+      name: snapshot.profile.name,
+      shortName: snapshot.profile.shortName,
+      role: snapshot.profile.role,
+      positioning: snapshot.profile.positioning,
+      summary: snapshot.profile.summary,
+      location: snapshot.profile.location,
+      aboutImageAlt: snapshot.copy.aboutImageAlt,
+      aboutCaptionLabel: snapshot.copy.aboutCaptionLabel,
+      contactPanelTitle: snapshot.copy.contactPanelTitle,
+      contactPrivacyCopy: snapshot.copy.contactPrivacyCopy,
+      updatedBy: email
+    }
   })
-  await db.contentCopyDraft.upsert({
+  await db.heroCopyDraft.upsert({
     where: { id: 'primary' },
-    create: { id: 'primary', ...snapshot.copy, updatedBy: email },
-    update: { ...snapshot.copy, updatedBy: email }
+    create: { id: 'primary', ...snapshot.hero, updatedBy: email },
+    update: { ...snapshot.hero, updatedBy: email }
   })
+
+  for (const section of snapshot.sections) {
+    await db.sectionCopyDraft.create({
+      data: {
+        section: section.section as SiteSection,
+        eyebrow: section.eyebrow,
+        title: section.title,
+        description: section.description,
+        actionLabel: section.actionLabel || null,
+        updatedBy: email
+      }
+    })
+  }
+
+  // Keep about body in ABOUT section description from flat copy when richer.
+  await db.sectionCopyDraft.update({
+    where: { section: SiteSection.ABOUT },
+    data: { description: snapshot.copy.aboutBody, updatedBy: email }
+  })
+
+  if (snapshot.principles.length) {
+    await db.aboutPrincipleDraft.createMany({
+      data: snapshot.principles.map((item, sortOrder) => ({
+        id: item.id ?? crypto.randomUUID(),
+        title: item.title,
+        text: item.text,
+        enabled: item.enabled,
+        sortOrder,
+        updatedBy: email
+      }))
+    })
+  }
 
   if (snapshot.profile.socialLinks.length) {
     await db.socialLinkDraft.createMany({
@@ -260,9 +525,10 @@ export const replaceDraftFromSnapshot = async (
         id: link.id ?? crypto.randomUUID(),
         label: link.label,
         href: link.href,
-        kind: link.kind.toUpperCase(),
+        kind: toSocialPlatform(link.kind),
         enabled: link.enabled,
-        sortOrder: index
+        sortOrder: index,
+        updatedBy: email
       }))
     })
   }
@@ -272,11 +538,11 @@ export const replaceDraftFromSnapshot = async (
       data: {
         id: item.id ?? crypto.randomUUID(),
         organization: item.organization,
+        organizationUrl: item.organizationUrl || null,
         role: item.role,
         location: item.location,
         startDate: new Date(`${item.startDate}T00:00:00.000Z`),
         endDate: item.endDate ? new Date(`${item.endDate}T00:00:00.000Z`) : null,
-        current: item.current,
         summary: item.summary,
         enabled: item.enabled,
         sortOrder: index,
@@ -294,8 +560,8 @@ export const replaceDraftFromSnapshot = async (
         degree: item.degree,
         location: item.location,
         startYear: item.startYear,
-        endYear: item.endYear,
-        detail: item.detail,
+        endYear: item.endYear ?? null,
+        detail: item.detail || null,
         enabled: item.enabled,
         sortOrder,
         updatedBy: email
@@ -304,25 +570,50 @@ export const replaceDraftFromSnapshot = async (
   }
 
   for (const [index, item] of snapshot.publications.entries()) {
+    const topicIds: string[] = []
+    for (const [topicIndex, topicName] of item.topics.entries()) {
+      const slug = slugify(topicName) || `topic-${topicIndex + 1}`
+      const topic = await db.topic.upsert({
+        where: { slug },
+        create: { name: topicName, slug },
+        update: { name: topicName }
+      })
+      topicIds.push(topic.id)
+    }
+
+    const type = publicationTypeSchema.parse(item.type) as PublicationType
     await db.publicationDraft.create({
       data: {
         id: item.id ?? crypto.randomUUID(),
+        slug: item.slug,
         title: item.title,
         year: item.year,
-        type: item.type,
+        month: item.month ?? null,
+        type,
+        status: (item.status as PublicationStatus) ?? PublicationStatus.PUBLISHED,
         venue: item.venue || null,
         pages: item.pages || null,
         doi: item.doi || null,
         paperUrl: item.paperUrl || null,
-        scholarUrl: item.scholarUrl,
+        scholarUrl: item.scholarUrl || null,
         abstract: item.abstract || null,
-        mediaAssetId: item.mediaAssetId || null,
+        bibtex: item.bibtex || null,
+        coverImageId: item.coverImageId || null,
+        pdfAssetId: item.pdfAssetId || null,
         featured: item.featured,
         enabled: item.enabled,
         sortOrder: index,
         updatedBy: email,
-        authors: { create: item.authors.map((name, sortOrder) => ({ name, sortOrder })) },
-        topics: { create: item.topics.map((name, sortOrder) => ({ name, sortOrder })) }
+        authors: {
+          create: item.authors.map((author, sortOrder) => ({
+            name: author.name,
+            isSelf: author.isSelf,
+            sortOrder
+          }))
+        },
+        topics: {
+          create: topicIds.map((topicId, sortOrder) => ({ topicId, sortOrder }))
+        }
       }
     })
   }
@@ -340,6 +631,38 @@ export const replaceDraftFromSnapshot = async (
       }
     })
   }
+
+  if (snapshot.learning.length) {
+    await db.learningDraft.createMany({
+      data: snapshot.learning.map((item, sortOrder) => ({
+        id: item.id ?? crypto.randomUUID(),
+        title: item.title,
+        issuer: item.issuer,
+        year: item.year ?? null,
+        credentialUrl: item.credentialUrl || null,
+        enabled: item.enabled,
+        sortOrder,
+        updatedBy: email
+      }))
+    })
+  }
+
+  if (snapshot.workStories.length) {
+    await db.workStoryDraft.createMany({
+      data: snapshot.workStories.map((item, sortOrder) => ({
+        id: item.id ?? crypto.randomUUID(),
+        title: item.title,
+        body: item.body,
+        evidence: item.evidence,
+        href: item.href,
+        linkLabel: item.linkLabel,
+        visualLabel: item.visualLabel,
+        enabled: item.enabled,
+        sortOrder,
+        updatedBy: email
+      }))
+    })
+  }
 }
 
 export const ensureCmsInitialized = async (email: string) => {
@@ -347,8 +670,7 @@ export const ensureCmsInitialized = async (email: string) => {
   const existing = await prisma.siteSettings.findUnique({ where: { id: 'primary' }, select: { id: true } })
   if (existing) return
 
-  const legacy = await prisma.siteContent.findUnique({ where: { id: 'primary' } })
-  const snapshot = legacy ? enrichLegacy(legacy.data) : fallbackPublishedSnapshot
+  const snapshot = fallbackPublishedSnapshot
 
   await prisma.$transaction(async (tx) => {
     for (const asset of localMedia) {
@@ -356,9 +678,14 @@ export const ensureCmsInitialized = async (email: string) => {
     }
     await replaceDraftFromSnapshot(tx, snapshot, email)
     const revision = await tx.contentRevision.create({
-      data: { version: 1, snapshot: snapshot as Prisma.InputJsonValue, note: 'Initial CMS import', publishedBy: email }
+      data: {
+        schemaVersion: 2,
+        snapshot: snapshot as Prisma.InputJsonValue,
+        note: 'Initial CMS seed',
+        publishedBy: email
+      }
     })
-    await tx.publicationState.upsert({
+    await tx.publishState.upsert({
       where: { id: 'primary' },
       create: {
         id: 'primary',
@@ -372,20 +699,44 @@ export const ensureCmsInitialized = async (email: string) => {
   })
 }
 
-export const getPublishedSnapshot = cache(async (): Promise<PublishedPortfolioSnapshot> => {
+async function loadPublishedSnapshot(): Promise<PublishedPortfolioSnapshot> {
+  'use cache'
+  cacheTag('portfolio')
+
   if (!isDatabaseConfigured()) return fallbackPublishedSnapshot
   try {
-    const state = await prisma.publicationState.findUnique({
+    const state = await prisma.publishState.findUnique({
       where: { id: 'primary' },
       include: { activeRevision: true }
     })
     if (state?.activeRevision) {
-      const parsed = publishedPortfolioSnapshotSchema.safeParse(state.activeRevision.snapshot)
-      if (parsed.success) return parsed.data
+      return upgradeSnapshot(state.activeRevision.snapshot)
     }
-    const legacy = await prisma.siteContent.findUnique({ where: { id: 'primary' } })
-    return legacy ? enrichLegacy(legacy.data) : fallbackPublishedSnapshot
+    return fallbackPublishedSnapshot
   } catch {
     return fallbackPublishedSnapshot
+  }
+}
+
+export const getPublishedSnapshot = cache(loadPublishedSnapshot)
+
+export const getPublishedMeta = cache(async () => {
+  'use cache'
+  cacheTag('portfolio')
+  const snapshot = await loadPublishedSnapshot()
+  if (!isDatabaseConfigured()) {
+    return { publishedAt: null as string | null, siteUrl: snapshot.settings.siteUrl }
+  }
+  try {
+    const state = await prisma.publishState.findUnique({
+      where: { id: 'primary' },
+      include: { activeRevision: { select: { publishedAt: true } } }
+    })
+    return {
+      publishedAt: state?.activeRevision?.publishedAt?.toISOString() ?? state?.publishedAt?.toISOString() ?? null,
+      siteUrl: snapshot.settings.siteUrl
+    }
+  } catch {
+    return { publishedAt: null as string | null, siteUrl: snapshot.settings.siteUrl }
   }
 })
