@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath, updateTag } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import {
   ContactMessageStatus,
   MediaKind,
@@ -737,7 +737,7 @@ export const duplicateCmsItem = async (
 }
 
 const revalidatePublicContent = () => {
-  updateTag('portfolio')
+  revalidateTag('portfolio', 'max')
   revalidatePath('/', 'layout')
   revalidatePath('/publications')
   revalidatePath('/opengraph-image')
