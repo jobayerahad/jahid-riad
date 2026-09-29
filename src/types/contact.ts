@@ -1,7 +1,5 @@
 import type { ContactInput } from '@/schemas/contact'
 
-export type TContactForm = ContactInput
-
 export type ContactResult =
   | { ok: true; message: string }
   | {

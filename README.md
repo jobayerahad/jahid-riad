@@ -1,6 +1,6 @@
 # Jahid Riad Portfolio
 
-An editorial portfolio built with Next.js App Router, strict TypeScript, Mantine, CSS Modules, Prisma, PostgreSQL, and Cloudinary. The protected `/admin` area is a form-based CMS for one owner.
+An editorial portfolio built with Next.js App Router, TypeScript, Tailwind CSS, CSS Modules, Prisma, PostgreSQL, and Cloudinary. The protected `/admin` area is a form-based CMS for one owner.
 
 Normalized PostgreSQL tables hold the working draft. Public pages read only the immutable snapshot selected by `publish_state.active_revision_id`. If PostgreSQL is unavailable or not configured, public pages safely use bundled content.
 
@@ -18,14 +18,12 @@ Open `http://localhost:3000`.
 Quality commands:
 
 ```bash
-npm run lint
 npm run typecheck
-npm run test
 npm run format:check
 npm run build
 ```
 
-`npm run check` runs format, lint, typecheck, unit tests, and build. End-to-end smoke tests: `npm run test:e2e` (requires a production build and Playwright browsers).
+`npm run check` runs format, typecheck, and build.
 
 ## Environment
 

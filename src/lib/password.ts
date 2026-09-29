@@ -59,7 +59,7 @@ export const needsRehash = (stored: string) => {
   return parsed.N !== SCRYPT_N || parsed.r !== SCRYPT_R || parsed.p !== SCRYPT_P
 }
 
-export const verifyPassword = async (password: string, stored: string) => {
+const verifyPassword = async (password: string, stored: string) => {
   const parsed = parseStoredHash(stored)
   if (!parsed) return false
 

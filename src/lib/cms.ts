@@ -509,7 +509,6 @@ export const replaceDraftFromSnapshot = async (
     })
   }
 
-  // Keep about body in ABOUT section description from flat copy when richer.
   await db.sectionCopyDraft.update({
     where: { section: SiteSection.ABOUT },
     data: { description: snapshot.copy.aboutBody, updatedBy: email }

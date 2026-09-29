@@ -244,7 +244,6 @@ export const siteSettingsSchema = z.object({
   cvAsset: mediaReferenceSchema.optional()
 })
 
-/** Flat copy bag kept for public components during the transition; built from hero + sections + principles. */
 export const contentCopySchema = z.object({
   heroHeading: z.string().trim().min(1).max(180),
   heroAccent: z.string().trim().min(1).max(100),
@@ -322,7 +321,6 @@ export type HeroCopyInput = z.input<typeof heroCopySchema>
 export type SectionCopyInput = z.input<typeof sectionCopySchema>
 export type AboutPrincipleInput = z.input<typeof aboutPrincipleSchema>
 export type PublishedPortfolioSnapshot = z.infer<typeof publishedPortfolioSnapshotSchema>
-export type PortfolioContent = PublishedPortfolioSnapshot
 
 const publicationTypeFromLegacy = (type: string): z.infer<typeof publicationTypeSchema> => {
   const lower = type.toLowerCase()

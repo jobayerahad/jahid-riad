@@ -36,7 +36,7 @@ export const getHeroIntroduction = (snapshot: Snapshot) => {
 
 export const getAboutSummary = (snapshot: Snapshot) => snapshot.copy.aboutBody
 
-export type WorkStory = {
+type WorkStory = {
   id?: string
   number: string
   title: string

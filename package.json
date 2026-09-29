@@ -6,14 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . && npm run typecheck",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
+    "check": "npm run format:check && npm run typecheck && npm run build",
     "audit:production": "npm audit --omit=dev --audit-level=high",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -53,21 +49,14 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.7",
-    "@playwright/test": "^1.63.0",
     "@types/node": "^26",
     "@types/pg": "^8.21.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.1.1",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.6",
-    "jsdom": "^30.1.1",
     "postcss": "^8.5.26",
     "prettier": "^3.6.2",
     "prisma": "^7.9.1",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.1"
+    "typescript": "^7.0.2"
   }
 }

@@ -71,11 +71,3 @@ export type CapabilityGroup = {
   description: string
   items: string[]
 }
-
-export type LearningItem = {
-  id: string
-  title: string
-  issuer: string
-  year?: number | null
-  credentialUrl?: string
-}
